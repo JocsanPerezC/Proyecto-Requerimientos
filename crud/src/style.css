@@ -1,0 +1,17 @@
+.App {
+  text-align: center;
+}
+
+.titulo{
+  margin: auto;
+  font-size: 48px;
+  color: #1476ff;
+}
+
+.container{
+  margin: auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 30%;
+  background-color: rgb(214, 214, 214);
+}
