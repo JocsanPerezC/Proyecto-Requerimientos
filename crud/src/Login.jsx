@@ -7,6 +7,7 @@ function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,10 +20,7 @@ function Login() {
 
       const data = await response.json();
       if (response.ok) {
-        setMsg('Login exitoso');
-        // Aquí podrías redirigir o guardar algo en localStorage
-        // localStorage.setItem('user', JSON.stringify(data));
-        // navigate('/dashboard');
+        navigate('/CreateProject');
       } else {
         setMsg(data.message || 'Error al iniciar sesión');
       }

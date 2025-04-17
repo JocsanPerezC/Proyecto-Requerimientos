@@ -9,6 +9,8 @@ import {
 } from 'react-router-dom';
 import Login from './Login';
 import Register from './Register';
+import CreateProject from './CreateProject';  
+
 
 function App() {
   return (
@@ -18,6 +20,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/CreateProject" element={<CreateProject />} />
         </Routes>
       </div>
     </Router>
