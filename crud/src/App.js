@@ -7,9 +7,9 @@ import {
   Link,
   Navigate,
 } from 'react-router-dom';
-import Login from './Login';
-import Register from './Register';
-import CreateProject from './CreateProject';  
+import Login from './Pages/Login';
+import Register from './Pages/Register';
+import CreateProject from './Components/Projects/CreateProject';
 
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/CreateProject" element={<CreateProject />} />
+          <Route path="/createproject" element={<CreateProject />} />
         </Routes>
       </div>
     </Router>

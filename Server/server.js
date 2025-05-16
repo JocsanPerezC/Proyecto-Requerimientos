@@ -112,5 +112,134 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
+// Crear un nuevo proyecto
+app.post("/api/projects/create", async (req, res) => {
+  const { name, description, type, startDate, members } = req.body;
+
+  try {
+    const pool = await poolPromise;
+    
+    // Validación: nombre del proyecto no puede estar vacío
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'El nombre del proyecto no puede estar vacío.' 
+      });
+    }
+    
+    // Insertar el proyecto en la base de datos
+    const result = await pool.request()
+      .input('name', sql.VarChar, name)
+      .input('description', sql.VarChar, description)
+      .input('date', sql.Date, date)
+      .input('type', sql.Date, type)
+      .query(`
+        INSERT INTO Projects (name, description, date, type, createdAt)
+        OUTPUT INSERTED.id, INSERTED.name, INSERTED.description, INSERTED.date, 
+               INSERTED.type, INSERTED.creator
+        VALUES (@name, @description, @date, @type, GETDATE())
+      `);
+    
+    // Obtener el proyecto recién creado
+    const newProject = result.recordset[0];
+    
+    // Si hay miembros para asignar, insertarlos en la tabla de relación
+    if (members && members.length > 0) {
+      for (const memberId of members) {
+        await pool.request()
+          .input('projectId', sql.Int, newProject.id)
+          .input('userId', sql.Int, memberId)
+          .query('INSERT INTO ProjectMembers (projectId, userId) VALUES (@projectId, @userId)');
+      }
+    }
+    
+    console.log('Proyecto creado exitosamente:', newProject.name);
+    res.json({ 
+      success: true, 
+      message: 'Proyecto creado exitosamente', 
+      project: newProject 
+    });
+    
+  } catch (err) {
+    console.error('Error al crear proyecto:', err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al crear el proyecto', 
+      error: err.message 
+    });
+  }
+});
+
+// Obtener todos los proyectos
+app.get("/api/projects", async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .query('SELECT * FROM Projects ORDER BY createdAt DESC');
+    
+    res.json({ 
+      success: true, 
+      projects: result.recordset 
+    });
+    
+  } catch (err) {
+    console.error('Error al obtener proyectos:', err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener los proyectos', 
+      error: err.message 
+    });
+  }
+});
+
+// Obtener un proyecto específico por ID
+app.get("/api/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const pool = await poolPromise;
+    
+    // Obtener detalles del proyecto
+    const projectResult = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT * FROM Projects WHERE id = @id');
+    
+    if (projectResult.recordset.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Proyecto no encontrado' 
+      });
+    }
+    
+    const project = projectResult.recordset[0];
+    
+    // Obtener miembros del proyecto
+    const membersResult = await pool.request()
+      .input('projectId', sql.Int, id)
+      .query(`
+        SELECT u.id, u.username, u.name, u.lastname
+        FROM Users u
+        JOIN ProjectMembers pm ON u.id = pm.userId
+        WHERE pm.projectId = @projectId
+      `);
+    
+    project.members = membersResult.recordset;
+    
+    res.json({ 
+      success: true, 
+      project: project 
+    });
+    
+  } catch (err) {
+    console.error('Error al obtener proyecto:', err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener el proyecto', 
+      error: err.message 
+    });
+  }
+});
+
+
 const PORT = 3001;
 app.listen(PORT, () => console.log(`🚀 Backend corriendo en http://localhost:${PORT}`));
