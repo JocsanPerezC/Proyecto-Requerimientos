@@ -1,5 +1,4 @@
-// src/Login.jsx
-import React, { use, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './style.css'
 
@@ -20,7 +19,10 @@ function Login() {
 
       const data = await response.json();
       if (response.ok) {
-        navigate('/CreateProject');
+        // Guardar el nombre de usuario en el localStorage para usar como identificador simple
+        localStorage.setItem('username', username);
+        // Redirigir al dashboard en lugar de CreateProject
+        navigate('/dashboard');
       } else {
         setMsg(data.message || 'Error al iniciar sesión');
       }
@@ -51,6 +53,7 @@ function Login() {
       </form>
       <p style={{ color: 'red' }}>{msg}</p>
       <p>¿No tienes cuenta? <Link to="/register">Regístrate</Link></p>
+      <p>¿Quieres recuperar tu cuenta? <Link to="/recover">Recuperar</Link></p>
     </div>
   );
 }
