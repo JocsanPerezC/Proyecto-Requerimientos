@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import './style.css'
+import '../../styles/style.css';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -21,6 +21,7 @@ function Login() {
       if (response.ok) {
         // Guardar el nombre de usuario en el localStorage para usar como identificador simple
         localStorage.setItem('username', username);
+        localStorage.setItem('userid', data.userid);
         // Redirigir al dashboard en lugar de CreateProject
         navigate('/dashboard');
       } else {

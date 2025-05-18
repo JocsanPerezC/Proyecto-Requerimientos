@@ -1,6 +1,6 @@
 import React, { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
-import './style.css'; // Opcional: para estilos separados
+import '../../styles/style.css';
 
 function Topbar() {
   const navigate = useNavigate();

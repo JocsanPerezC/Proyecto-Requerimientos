@@ -1,9 +1,12 @@
 // src/Register.jsx
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import './style.css'
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import '../../styles/style.css';
 
 function Register() {
+  const { id } = useParams(); // ID del proyecto
+    console.log(id);
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -11,15 +14,16 @@ function Register() {
   const [username, setUsername] = useState('');
   const [emergencycontact, setEmergencyContact] = useState('');
   const [birthday, setBirthday] = useState('');
+  const [rol, setRol] = useState('Usuario');
   const [msg, setMsg] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
+      const response = await fetch('http://localhost:3001/api/register-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, emergencycontact, username, name, lastname, birthday }),
+        body: JSON.stringify({ email, password, emergencycontact, username, name, lastname, birthday, rol }),
       });
 
       const data = await response.json();
@@ -34,7 +38,7 @@ function Register() {
   };
 
   return (
-    <div className= 'titulo'>
+    <div classname= 'titulo'>
       <h2>Registro</h2>
       <form onSubmit={handleRegister}>
         <input
@@ -86,10 +90,23 @@ function Register() {
           onChange={(e) => setBirthday(e.target.value)}
           required
         /><br /><br />
+        <div className="form-group">
+          <label>Rol</label>
+          <select value={rol} onChange={e => setRol(e.target.value)}>
+            <option value="Administrador">Administrador</option>
+            <option value="Programador">Programador</option>
+            <option value="QA">QA</option>
+            <option value="Diseñador">Diseñador</option>
+            <option value="Administrador de Proyecto">Administrador de Proyecto</option>
+            <option value="Stakeholder">Stakeholder</option>
+            <option value="Usuario">Usuario</option>
+            <option value="Gerente">Gerente</option>
+          </select>
+        </div>
         <button type="submit">Registrarse</button>
+        <button onClick={() => navigate(`/project/${id}/add-user`)}>Volver</button>
       </form>
       <p style={{ color: 'green' }}>{msg}</p>
-      <p>¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link></p>
     </div>
   );
 }

@@ -3,8 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 
 function AddUserToProject() {
   const { id } = useParams(); // ID del proyecto
+  console.log(id);
   const [username, setUsername] = useState('');
-  const [rol, setRol] = useState('Miembro');
+  const [rol, setRol] = useState('Lider de Proyecto');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
@@ -63,12 +64,12 @@ function AddUserToProject() {
             <option value="Gerente">Gerente</option>
           </select>
         </div>
-        <div className="form-actions">
+        <div className="buttongroup">
           <button type="submit">Agregar</button>
           <button type="button" onClick={() => navigate(`/project/${id}`)}>Volver</button>
         </div>
       </form>
-      <p>¿Deseas registrar un usuario nuevo? <Link to="/register-project">Click aquí</Link></p>
+      <p className='links'>¿Deseas registrar un usuario nuevo? <Link to="/register-project">Click aquí</Link></p>
     </div>
   );
 }

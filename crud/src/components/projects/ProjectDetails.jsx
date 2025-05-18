@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Topbar from './Topbar';
-import './style.css';
+import Topbar from '../layout/Topbar';
+import '../../styles/style.css';
 
 function ProjectDetails() {
   const { id } = useParams();
@@ -41,15 +41,18 @@ function ProjectDetails() {
         <h2>{project.name}</h2>
         <p>{project.description}</p>
         <p><strong>Fecha de inicio:</strong> {new Date(project.date).toLocaleDateString()}</p>
-        {rolUsuario === ( 'Administrador de Proyecto' || 'Lider de Proyecto') && (
+        <div className = "buttongroup">
+        {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
             <>
-                <button onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
-                <button onClick={() => navigate(`/project/${id}/add-task`)}>Agregar Tarea</button>
-                <button onClick={() => navigate(`/project/${id}/add-requirement`)}>Agregar Requerimiento</button>
-                <button onClick={() => navigate(`/project/${id}/edit-user`)}>Editar Usuarios</button>
+                <button className = "button" onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
+                <button className = "button" onClick={() => navigate(`/project/${id}/add-task`)}>Agregar Tarea</button>
+                <button className = "button" onClick={() => navigate(`/project/${id}/add-requirement`)}>Agregar Requerimiento</button>
+                <button className = "button" onClick={() => navigate(`/project/${id}/users`)}>Editar Usuarios</button>
+              
             </>
             )}
-            <button onClick={() => navigate('/dashboard')}>Volver</button>
+            <button  onClick={() => navigate('/dashboard')}>Volver</button>
+            </div>
         </div>
     </>
   );

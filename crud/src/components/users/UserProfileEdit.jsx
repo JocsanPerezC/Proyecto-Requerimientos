@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserContext } from './UserContext';
+import { UserContext } from '../auth/UserContext';
 
 function UserProfileEdit() {
   const [userData, setUserData] = useState({
@@ -67,8 +67,9 @@ function UserProfileEdit() {
     }));
 
     localStorage.setItem('username', userData.username);
-
+    alert("Perfil actualizado correctamente");
     setMessage('Perfil actualizado correctamente');
+    return navigate(`/profile`);
   } catch (err) {
     setMessage('Error: ' + err.message);
   }
