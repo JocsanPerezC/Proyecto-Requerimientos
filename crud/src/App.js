@@ -1,23 +1,23 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './Login';
-import Register from './Register'; // Asumiendo que ya existe un componente de registro
-import Dashboard from './Dashboard'; // Nuestro nuevo componente
-import CreateProject from './CreateProject'; // Formulario de creación de proyecto
-import ProjectDetails from './ProjectDetails'; // Detalles del proyecto
-import AddUserToProject from './AddUserToProject'; 
-import RegisterProject from './RegisterProject'; // Registro de proyecto
-import './style.css'; // Estilos globales
-import Topbar from './Topbar'; // Barra superior
-import UserProfileView from './UserProfileView';
-import UserProfileEdit from './UserProfileEdit';
-import { UserProvider } from './UserContext';
-import AccountRecovery from './AccountRecovery'; // Componente para recuperación de cuenta
-import ProjectUsers from './ProjectUsers';
-import UserProjectProfile from './UserProjectProfile';
-import EditUserRole from './EditUserRole';
-import WithProjectRole from './WithProjectRole'; // Componente para verificar el rol del usuario en el proyecto
-import EditProject from './EditProject';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register'; // Asumiendo que ya existe un componente de registro
+import Dashboard from './components/layout/Dashboard'; // Nuestro nuevo componente
+import CreateProject from './components/projects/CreateProject'; // Formulario de creación de proyecto
+import ProjectDetails from './components/projects/ProjectDetails'; // Detalles del proyecto
+import AddUserToProject from './components/users/AddUserToProject'; 
+import RegisterProject from './components/projects/RegisterProject'; // Registro de proyecto
+import './styles/style.css'; // Estilos globales
+import Topbar from './components/layout/Topbar'; // Barra superior
+import UserProfileView from './components/users/UserProfileView';
+import UserProfileEdit from './components/users/UserProfileEdit';
+import { UserProvider } from './components/auth/UserContext';
+import AccountRecovery from './components/auth/AccountRecovery'; // Componente para recuperación de cuenta
+import ProjectUsers from './components/projects/ProjectUsers';
+import UserProjectProfile from './components/projects/UserProjectProfile';
+import EditUserRole from './components/users/EditUserRole';
+import WithProjectRole from './components/projects/WithProjectRole'; // Componente para verificar el rol del usuario en el proyecto
+import EditProject from './components/projects/EditProject';
 // Importar otros componentes necesarios
 
 function App() {

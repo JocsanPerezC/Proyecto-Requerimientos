@@ -1,7 +1,7 @@
 // src/Register.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './style.css'
+import '../../styles/style.css';
 
 function Register() {
   const [email, setEmail] = useState('');
