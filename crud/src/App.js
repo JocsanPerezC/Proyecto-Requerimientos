@@ -13,7 +13,11 @@ import UserProfileView from './UserProfileView';
 import UserProfileEdit from './UserProfileEdit';
 import { UserProvider } from './UserContext';
 import AccountRecovery from './AccountRecovery'; // Componente para recuperación de cuenta
-// Componente para agregar usuario a un proyecto
+import ProjectUsers from './ProjectUsers';
+import UserProjectProfile from './UserProjectProfile';
+import EditUserRole from './EditUserRole';
+import WithProjectRole from './WithProjectRole'; // Componente para verificar el rol del usuario en el proyecto
+import EditProject from './EditProject';
 // Importar otros componentes necesarios
 
 function App() {
@@ -34,7 +38,19 @@ function App() {
           <Route path="/profile" element={<UserProfileView />} />
           <Route path="/profile/edit" element={<UserProfileEdit />} />
           <Route path="/recover" element={<AccountRecovery />} />
-          {/* Aquí puedes agregar más rutas según sea necesario */}
+          <Route path="/project/:id/users" element={
+            <WithProjectRole> 
+              <ProjectUsers />
+            </WithProjectRole>} />
+          <Route path="/project/:id/users/:userId" element={
+            <WithProjectRole> 
+              <UserProjectProfile />
+            </WithProjectRole>} />
+          <Route path="/project/:id/users/:userid/edit" element={
+            <WithProjectRole> 
+              <EditUserRole />
+            </WithProjectRole>} />
+            <Route path="/project/:id/edit" element={<EditProject />} />
         </Routes>
       </div>
     </Router>

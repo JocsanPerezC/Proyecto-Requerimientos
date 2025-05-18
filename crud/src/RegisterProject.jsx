@@ -1,9 +1,12 @@
 // src/Register.jsx
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import './style.css'
 
 function Register() {
+  const { id } = useParams(); // ID del proyecto
+    console.log(id);
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -101,6 +104,7 @@ function Register() {
           </select>
         </div>
         <button type="submit">Registrarse</button>
+        <button onClick={() => navigate(`/project/${id}/add-user`)}>Volver</button>
       </form>
       <p style={{ color: 'green' }}>{msg}</p>
     </div>

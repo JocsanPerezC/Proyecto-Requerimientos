@@ -186,7 +186,8 @@ app.post("/api/login", async (req, res) => {
       res.json({ 
         success: true, 
         message: 'Inicio de sesión exitoso',
-        username: user.username
+        username: user.username,
+        userid: user.id
       });
   
     } catch (err) {
@@ -206,7 +207,10 @@ app.get("/api/projects", authenticateUser, async (req, res) => {
     const result = await pool.request()
       .input('userId', sql.Int, userId)
       .query(`
-        SELECT p.* FROM Projects p
+        SELECT 
+          p.id, p.name, p.description, p.date,
+          pm.rol
+        FROM Projects p
         INNER JOIN RolesProyecto pm ON p.id = pm.projectid
         WHERE pm.userid = @userId
         ORDER BY p.date DESC
@@ -286,6 +290,45 @@ app.post("/api/create-project", authenticateUser, async (req, res) => {
   }
 });
 
+app.delete("/api/project/:id", authenticateUser, async (req, res) => {
+  const projectId = parseInt(req.params.id);
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Validar que el usuario sea administrador de este proyecto
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+      return res.status(403).json({ success: false, message: 'Solo los administradores pueden eliminar proyectos' });
+    }
+
+    // Eliminar todas las relaciones de miembros
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`DELETE FROM RolesProyecto WHERE projectid = @projectId`);
+
+    // Eliminar el proyecto
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`DELETE FROM Projects WHERE id = @projectId`);
+
+    res.json({ success: true, message: 'Proyecto eliminado exitosamente' });
+
+  } catch (err) {
+    console.error("Error al eliminar proyecto:", err);
+    res.status(500).json({ success: false, message: 'Error al eliminar el proyecto' });
+  }
+});
+
+
 app.get("/api/project/:id", authenticateUser, async (req, res) => {
   try {
     const projectId = parseInt(req.params.id);
@@ -310,11 +353,51 @@ app.get("/api/project/:id", authenticateUser, async (req, res) => {
       `);
 
     const rol = roleResult.recordset.length > 0 ? roleResult.recordset[0].rol : null;
-
+    console.log("Rol del usuario:", rol);
     res.json({ success: true, project: projectResult.recordset[0], rol });
   } catch (err) {
     console.error("Error al obtener proyecto:", err);
     res.status(500).json({ success: false, message: 'Error del servidor' });
+  }
+});
+
+app.put("/api/project/:id", authenticateUser, async (req, res) => {
+  const projectId = parseInt(req.params.id);
+  const { name, description, date } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Validar si es administrador
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+      return res.status(403).json({ success: false, message: 'Solo los administradores pueden editar el proyecto' });
+    }
+
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .input('name', sql.VarChar, name)
+      .input('description', sql.VarChar, description)
+      .input('date', sql.Date, date)
+      .query(`
+        UPDATE Projects 
+        SET name = @name, description = @description, date = @date 
+        WHERE id = @projectId
+      `);
+
+    res.json({ success: true, message: 'Proyecto actualizado' });
+
+  } catch (err) {
+    console.error("Error al actualizar proyecto:", err);
+    res.status(500).json({ success: false, message: 'Error al actualizar proyecto' });
   }
 });
 
@@ -477,6 +560,97 @@ app.put("/api/user/edit", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al actualizar perfil' });
   }
 });
+
+app.get("/api/project/:id/users", authenticateUser, async (req, res) => {
+  try {
+    const projectid = parseInt(req.params.id);
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('projectid', sql.Int, projectid)
+      .query(`
+        SELECT u.id, u.username, u.name, u.lastname, u.email, u.emergencycontact, pm.rol
+        FROM Users u
+        JOIN RolesProyecto pm ON pm.userid = u.id
+        WHERE pm.projectid = @projectid
+      `);
+    res.json({ success: true, users: result.recordset });
+  } catch (err) {
+    console.error("Error al obtener usuarios del proyecto:", err);
+    res.status(500).json({ success: false, message: 'Error al obtener usuarios' });
+  }
+});
+
+app.delete("/api/project/:id/users/:userId", authenticateUser, async (req, res) => {
+  const projectId = parseInt(req.params.id);
+  const userIdToRemove = parseInt(req.params.userId);
+  const currentUserId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Validar que el usuario actual sea administrador
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, currentUserId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    if (
+      roleResult.recordset.length === 0 ||
+      roleResult.recordset[0].rol !== 'Administrador de Proyecto'
+    ) {
+      return res.status(403).json({ success: false, message: 'No autorizado' });
+    }
+
+    // No permitir que un admin se elimine a sí mismo
+    if (userIdToRemove === currentUserId) {
+      return res.status(400).json({ success: false, message: 'No puedes eliminarte a ti mismo del proyecto.' });
+    }
+
+    // Eliminar al usuario del proyecto
+    await pool.request()
+      .input('userId', sql.Int, userIdToRemove)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        DELETE FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    res.json({ success: true, message: 'Usuario eliminado del proyecto' });
+
+  } catch (err) {
+    console.error("Error al eliminar usuario del proyecto:", err);
+    res.status(500).json({ success: false, message: 'Error del servidor' });
+  }
+});
+
+app.put("/api/project/:id/users/:userid/role", authenticateUser, async (req, res) => {
+  try {
+    const { userid, id } = req.params;
+    console.log("ID del usuario:", userid);
+    const { rol } = req.body;
+    console.log("rol:", rol);
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input('userid', sql.Int, userid)
+      .input('projectid', sql.Int, id)
+      .input('rol', sql.VarChar, rol)
+      .query(`
+        UPDATE RolesProyecto 
+        SET rol = @rol 
+        WHERE userid = @userid AND projectid = @projectid
+      `);
+
+    res.json({ success: true, message: 'Rol actualizado', userid: userid });
+  } catch (err) {
+    console.error("Error al actualizar rol:", err);
+    res.status(500).json({ success: false, message: 'Error al actualizar rol' });
+  }
+});
+
 
 
 const PORT = 3001;

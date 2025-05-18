@@ -3,8 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 
 function AddUserToProject() {
   const { id } = useParams(); // ID del proyecto
+  console.log(id);
   const [username, setUsername] = useState('');
-  const [rol, setRol] = useState('Miembro');
+  const [rol, setRol] = useState('Lider de Proyecto');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
