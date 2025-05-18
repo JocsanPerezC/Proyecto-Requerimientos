@@ -34,7 +34,7 @@ function Register() {
   };
 
   return (
-    <div classname= 'titulo'>
+    <div className= 'titulo'>
       <h2>Registro</h2>
       <form onSubmit={handleRegister}>
         <input
