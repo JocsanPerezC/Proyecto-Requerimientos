@@ -83,7 +83,7 @@ function EditUserRole() {
           <option value="Gerente">Gerente</option>
         </select>
         <button type="submit">Guardar</button>
-        <button type="button" onClick={() => navigate(`/project/${id}/users/${userid}`)}>Cancelar</button>
+        <button type="button" onClick={() => navigate(`/project/${id}/users`)}>Cancelar</button>
       </form>
       {message && <p>{message}</p>}
     </div>

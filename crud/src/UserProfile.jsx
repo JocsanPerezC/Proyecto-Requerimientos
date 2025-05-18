@@ -10,7 +10,7 @@ function UserProfile() {
     const username = localStorage.getItem('username');
     if (!username) return;
 
-    // Cargar datos actuales (puedes tener un endpoint /api/user si lo prefieres)
+    // Cargar datos actuales (puede tener un endpoint /api/user)
     // Simulación temporal
     setUser({ name: '', lastname: '', email: '', emergencycontact: '' });
   }, []);
