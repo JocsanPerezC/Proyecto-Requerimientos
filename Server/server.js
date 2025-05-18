@@ -2,12 +2,85 @@ const express = require("express");
 const cors = require("cors");
 const { sql, poolPromise } = require('./db');
 const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json()); 
 
+const isAdminOfProject = async (userId, projectId) => {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('userid', sql.Int, userId)
+    .input('projectid', sql.Int, projectId)
+    .query(`
+      SELECT * FROM RolesProyecto 
+      WHERE userid = @userid AND projectid = @projectid AND ( rol = 'Administrador de Proyecto' OR rol = 'Lider de Proyecto')
+    `);
+  return result.recordset.length > 0;
+};
+
+// Middleware para validar autenticación básica
+const authenticateUser = async (req, res, next) => {
+  const username = req.headers.authorization?.split('Bearer ')[1];
+  
+  if (!username) {
+    return res.status(401).json({ success: false, message: 'No autorizado: Usuario no autenticado' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('username', sql.VarChar, username)
+      .query('SELECT * FROM Users WHERE username = @username');
+    
+    if (result.recordset.length === 0) {
+      return res.status(401).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    // Adjuntar la información del usuario al objeto request
+    req.user = result.recordset[0];
+    next();
+  } catch (err) {
+    console.error('Error de autenticación:', err);
+    res.status(500).json({ success: false, message: 'Error del servidor' });
+  }
+};
+
+app.post("/api/recover", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('username', sql.VarChar, username)
+      .input('email', sql.VarChar, email)
+      .query('SELECT * FROM Users WHERE LOWER(username) = LOWER(@username) AND LOWER(email) = LOWER(@email)');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado con ese username y email' });
+    }
+
+    const user = result.recordset[0];
+
+    if (user.password !== password) {
+      return res.status(400).json({ success: false, message: 'Contraseña incorrecta' });
+    }
+
+    if (user.active === 1) {
+      return res.status(200).json({ success: true, message: 'La cuenta ya estaba activa' });
+    }
+
+    // Reactivar la cuenta
+    await pool.request()
+      .input('id', sql.Int, user.id)
+      .query('UPDATE Users SET Active = 1 WHERE id = @id');
+
+    res.json({ success: true, message: 'Cuenta reactivada correctamente' });
+  } catch (err) {
+    console.error("Error al recuperar cuenta:", err);
+    res.status(500).json({ success: false, message: 'Error del servidor' });
+  }
+});
 
 // Registrar usuario
 app.post("/api/register", async (req, res) => {
@@ -19,7 +92,7 @@ app.post("/api/register", async (req, res) => {
     // VALIDACIÓN: Edad mínima 15 años
     const fechaNac = new Date(birthday);
     const hoy = new Date();
-    const edad = hoy.getFullYear() - fechaNac.getFullYear();
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
     const mes = hoy.getMonth() - fechaNac.getMonth();
     if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
       edad--;
@@ -87,6 +160,7 @@ app.post("/api/register", async (req, res) => {
 
 // Login usuario
 app.post("/api/login", async (req, res) => {
+  console.log("estoy dentro de login");
     const { username, password } = req.body;
 
     try {
@@ -100,11 +174,20 @@ app.post("/api/login", async (req, res) => {
       }
       const user = result.recordset[0];
 
+      if (user.Active == 0) {
+        return res.status(401).json({ success: false, message: 'Usuario no encontrado.' });
+      }
+
       if (user.password !== password) {
         return res.status(401).json({ success: false, message: 'Contraseña incorrecta.' });
       }
+      
       console.log('Inicio de sesión exitoso:', username);
-      res.json({ success: true, message: 'Inicio de sesión exitoso' });
+      res.json({ 
+        success: true, 
+        message: 'Inicio de sesión exitoso',
+        username: user.username
+      });
   
     } catch (err) {
       console.error('Error en login:', err);
@@ -112,131 +195,286 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// Crear un nuevo proyecto
-app.post("/api/projects/create", async (req, res) => {
-  const { name, description, type, startDate, members } = req.body;
-
+// Obtener todos los proyectos del usuario
+app.get("/api/projects", authenticateUser, async (req, res) => {
+  console.log("estoy dentro de projects");
   try {
+    const userId = req.user.id;
     const pool = await poolPromise;
     
-    // Validación: nombre del proyecto no puede estar vacío
-    if (!name || name.trim() === '') {
+    // Obtenemos proyectos donde el usuario es miembro
+    const result = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT p.* FROM Projects p
+        INNER JOIN RolesProyecto pm ON p.id = pm.projectid
+        WHERE pm.userid = @userId
+        ORDER BY p.date DESC
+      `);
+    
+    res.json({ success: true, projects: result.recordset });
+  } catch (err) {
+    console.error('Error al obtener proyectos:', err);
+    res.status(500).json({ success: false, message: 'Error al cargar los proyectos' });
+  }
+});
+
+// Crear un nuevo proyecto
+app.post("/api/create-project", authenticateUser, async (req, res) => {
+  try {
+    const { name, description, date} = req.body;
+    const userId = req.user.id;
+    
+    console.log("Datos recibidos:", { name, description, date});
+    console.log("Usuario:", userId);
+
+    // Validación básica
+    if (!name || !date) {
       return res.status(400).json({ 
         success: false, 
-        message: 'El nombre del proyecto no puede estar vacío.' 
+        message: 'Nombre y fecha de inicio son obligatorios' 
       });
     }
     
-    // Insertar el proyecto en la base de datos
-    const result = await pool.request()
-      .input('name', sql.VarChar, name)
-      .input('description', sql.VarChar, description)
-      .input('date', sql.Date, date)
-      .input('type', sql.Date, type)
+    const pool = await poolPromise;
+    
+    // Comenzamos una transacción
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    
+    try {
+      // 1. Insertar el proyecto
+      const projectResult = await transaction.request()
+        .input('name', sql.VarChar, name)
+        .input('description', sql.VarChar, description || '')
+        .input('date', sql.Date, date)
+        .input('creator', sql.Int, userId)
+        .query(`
+          INSERT INTO Projects (name, description, date, creator)
+          OUTPUT INSERTED.id
+          VALUES (@name, @description, @date, @creator)
+        `);
+      
+      const projectId = projectResult.recordset[0].id;
+      
+      // 2. Agregar al creador como miembro del proyecto (con rol de administrador de proyecto)
+      await transaction.request()
+        .input('projectid', sql.Int, projectId)
+        .input('userid', sql.Int, userId)
+        .input('rol', sql.VarChar, 'Administrador de Proyecto')
+        .query(`
+          INSERT INTO RolesProyecto (projectid, userid, rol)
+          VALUES (@projectid, @userid, @rol)
+        `);
+      
+      // Confirmar transacción
+      await transaction.commit();
+      
+      res.json({ 
+        success: true, 
+        message: 'Proyecto creado exitosamente',
+        projectId: projectId
+      });
+    } catch (err) {
+      // Rollback en caso de error
+      await transaction.rollback();
+      throw err;
+    }
+  } catch (err) {
+    console.error('Error al crear proyecto:', err);
+    res.status(500).json({ success: false, message: 'Error al crear el proyecto' });
+  }
+});
+
+app.get("/api/project/:id", authenticateUser, async (req, res) => {
+  try {
+    const projectId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    const pool = await poolPromise;
+
+    const projectResult = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query('SELECT * FROM Projects WHERE id = @projectId');
+
+    if (projectResult.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Proyecto no encontrado' });
+    }
+
+    // Obtener rol del usuario en este proyecto
+    const roleResult = await pool.request()
+      .input('userid', sql.Int, userId)
+      .input('projectid', sql.Int, projectId)
       .query(`
-        INSERT INTO Projects (name, description, date, type, createdAt)
-        OUTPUT INSERTED.id, INSERTED.name, INSERTED.description, INSERTED.date, 
-               INSERTED.type, INSERTED.creator
-        VALUES (@name, @description, @date, @type, GETDATE())
+        SELECT rol FROM RolesProyecto WHERE userid = @userid AND projectid = @projectid
       `);
-    
-    // Obtener el proyecto recién creado
-    const newProject = result.recordset[0];
-    
-    // Si hay miembros para asignar, insertarlos en la tabla de relación
-    if (members && members.length > 0) {
-      for (const memberId of members) {
-        await pool.request()
-          .input('projectId', sql.Int, newProject.id)
-          .input('userId', sql.Int, memberId)
-          .query('INSERT INTO ProjectMembers (projectId, userId) VALUES (@projectId, @userId)');
+
+    const rol = roleResult.recordset.length > 0 ? roleResult.recordset[0].rol : null;
+
+    res.json({ success: true, project: projectResult.recordset[0], rol });
+  } catch (err) {
+    console.error("Error al obtener proyecto:", err);
+    res.status(500).json({ success: false, message: 'Error del servidor' });
+  }
+});
+
+app.post("/api/project/:id/add-user", authenticateUser, async (req, res) => {
+  try {
+    const projectid = parseInt(req.params.id);
+    const userid = req.user.id;
+    const { username, rol } = req.body;
+
+    if (!await isAdminOfProject(userid, projectid)) {
+      return res.status(403).json({ success: false, message: 'Solo los administradores pueden agregar usuarios' });
+    }
+
+    if (!username || !rol) {
+      return res.status(400).json({ success: false, message: 'Se requiere nombre de usuario y rol' });
+    }
+
+    const pool = await poolPromise;
+
+    // 1. Verificar si el usuario existe
+    const userResult = await pool.request()
+      .input('username', sql.VarChar, username)
+      .query('SELECT id FROM Users WHERE username = @username');
+
+    if (userResult.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const userId = userResult.recordset[0].id;
+
+    // 2. Verificar si ya es miembro
+    const existing = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectid', sql.Int, projectid)
+      .query(`
+        SELECT * FROM RolesProyecto 
+        WHERE userid = @userid AND projectid = @projectid
+      `);
+
+    if (existing.recordset.length > 0) {
+      return res.status(400).json({ success: false, message: 'El usuario ya está en el proyecto' });
+    }
+
+    // 3. Insertar en ProjectMembers
+    await pool.request()
+      .input('projectid', sql.Int, projectid)
+      .input('userId', sql.Int, userId)
+      .input('rol', sql.VarChar, rol)
+      .query(`
+        INSERT INTO RolesProyecto (projectid, userid, rol)
+        VALUES (@projectid, @userid, @rol)
+      `);
+
+    res.json({ success: true, message: 'Usuario agregado correctamente al proyecto' });
+
+  } catch (err) {
+    console.error("Error al agregar usuario al proyecto:", err);
+    res.status(500).json({ success: false, message: 'Error del servidor' });
+  }
+});
+
+app.delete("/api/user", authenticateUser, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input('userId', sql.Int, userId)
+      .query('UPDATE Users SET active = 0 WHERE id = @userId');
+
+    res.json({ success: true, message: 'Cuenta desactivada' });
+  } catch (err) {
+    console.error("Error al desactivar usuario:", err);
+    res.status(500).json({ success: false, message: 'Error al desactivar cuenta' });
+  }
+});
+
+app.get("/api/user", authenticateUser, async (req, res) => {
+  try {
+    const { name, lastname, email, emergencycontact } = req.user;
+    res.json({ name, lastname, email, emergencycontact });
+  } catch (err) {
+    res.status(500).json({ message: 'Error al cargar el perfil' });
+  }
+});
+
+app.put("/api/user/edit", authenticateUser, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { username, email, emergencycontact, password } = req.body;
+
+    // Validación básica
+    if (!username || !email || !emergencycontact) {
+      return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios' });
+    }
+
+    // Validación de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: 'Email inválido' });
+    }
+
+    // Validación de formato de emergencycontact
+    const phoneRegex = /^\d{8}$/;
+    if (!phoneRegex.test(emergencycontact)) {
+      return res.status(400).json({ success: false, message: 'El contacto de emergencia debe ser un número válido de 8 dígitos' });
+    }
+
+    // Validación de contraseña segura
+    if (password) {
+      const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ success: false, message: 'La contraseña debe tener mínimo 8 caracteres, al menos una mayúscula, un número y un carácter especial.' });
       }
     }
-    
-    console.log('Proyecto creado exitosamente:', newProject.name);
-    res.json({ 
-      success: true, 
-      message: 'Proyecto creado exitosamente', 
-      project: newProject 
-    });
-    
-  } catch (err) {
-    console.error('Error al crear proyecto:', err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error al crear el proyecto', 
-      error: err.message 
-    });
-  }
-});
 
-// Obtener todos los proyectos
-app.get("/api/projects", async (req, res) => {
-  try {
     const pool = await poolPromise;
-    const result = await pool.request()
-      .query('SELECT * FROM Projects ORDER BY createdAt DESC');
-    
-    res.json({ 
-      success: true, 
-      projects: result.recordset 
-    });
-    
-  } catch (err) {
-    console.error('Error al obtener proyectos:', err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error al obtener los proyectos', 
-      error: err.message 
-    });
-  }
-});
 
-// Obtener un proyecto específico por ID
-app.get("/api/projects/:id", async (req, res) => {
-  const { id } = req.params;
-  
-  try {
-    const pool = await poolPromise;
-    
-    // Obtener detalles del proyecto
-    const projectResult = await pool.request()
-      .input('id', sql.Int, id)
-      .query('SELECT * FROM Projects WHERE id = @id');
-    
-    if (projectResult.recordset.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Proyecto no encontrado' 
-      });
-    }
-    
-    const project = projectResult.recordset[0];
-    
-    // Obtener miembros del proyecto
-    const membersResult = await pool.request()
-      .input('projectId', sql.Int, id)
+    // Verificar si el username está en uso por otro usuario
+    const usernameResult = await pool.request()
+      .input('username', sql.VarChar, username)
+      .input('userId', sql.Int, userId)
       .query(`
-        SELECT u.id, u.username, u.name, u.lastname
-        FROM Users u
-        JOIN ProjectMembers pm ON u.id = pm.userId
-        WHERE pm.projectId = @projectId
+        SELECT id FROM Users 
+        WHERE LOWER(username) = LOWER(@username) AND id <> @userId
       `);
-    
-    project.members = membersResult.recordset;
-    
-    res.json({ 
-      success: true, 
-      project: project 
-    });
-    
+
+    if (usernameResult.recordset.length > 0) {
+      return res.status(400).json({ success: false, message: 'El nombre de usuario ya está en uso por otro usuario.' });
+    }
+
+    // Verificar si el email está en uso por otro usuario
+    const emailResult = await pool.request()
+      .input('email', sql.VarChar, email)
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT id FROM Users 
+        WHERE LOWER(email) = LOWER(@email) AND id <> @userId
+      `);
+
+    if (emailResult.recordset.length > 0) {
+      return res.status(400).json({ success: false, message: 'El email ya está asociado a otro usuario.' });
+    }
+
+    await pool.request()
+      .input('id', sql.Int, userId)
+      .input('username', sql.VarChar, username)
+      .input('email', sql.VarChar, email)
+      .input('emergencycontact', sql.VarChar, emergencycontact)
+      .input('password', sql.VarChar, password || req.user.password)
+      .query(`
+        UPDATE Users 
+        SET username = @username, email = @email, emergencycontact = @emergencycontact, password = @password
+        WHERE id = @id
+      `);
+
+    res.json({ success: true, message: 'Perfil actualizado' });
   } catch (err) {
-    console.error('Error al obtener proyecto:', err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error al obtener el proyecto', 
-      error: err.message 
-    });
+    console.error("Error al actualizar perfil:", err);
+    res.status(500).json({ success: false, message: 'Error al actualizar perfil' });
   }
 });
 
