@@ -18,6 +18,9 @@ import UserProjectProfile from './components/projects/UserProjectProfile';
 import EditUserRole from './components/users/EditUserRole';
 import WithProjectRole from './components/projects/WithProjectRole'; // Componente para verificar el rol del usuario en el proyecto
 import EditProject from './components/projects/EditProject';
+import CreateActivities from './Components/Projects/CreateActivities'; // Componente para crear actividades
+import CreateRequirement from './Components/Projects/CreateRequirement'; // Componente para crear requisitos
+import CreateTask from './Components/Projects/CreateTask'; // Componente para crear tareas
 // Importar otros componentes necesarios
 
 function App() {
@@ -34,6 +37,9 @@ function App() {
           <Route path="/project/:id" element={<ProjectDetails />} />
           <Route path="/project/:id/add-user" element={<AddUserToProject />} />
           <Route path="/register-project" element={<RegisterProject />} />
+          <Route path="/project/:id/add-requirement" element={<CreateRequirement />} />
+          <Route path="/project/:id/add-activities" element={<CreateActivities />} />
+          <Route path="/project/:id/activity/:activityId/add-task" element={<CreateTask />} />
           <Route path="/topbar" element={<Topbar />} />
           <Route path="/profile" element={<UserProfileView />} />
           <Route path="/profile/edit" element={<UserProfileEdit />} />
