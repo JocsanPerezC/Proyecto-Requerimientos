@@ -74,9 +74,16 @@ useEffect(() => {
       }
 
       const payload = {
-        ...taskData,
+        name: taskData.title,
+        description: taskData.description,
+        date: taskData.date,
+        status: taskData.status,
+        assigned: taskData.assigned,
         activityid: parseInt(activityId)
       };
+
+      console.log("Payload que se va a enviar:", payload);
+
 
       const response = await fetch('http://localhost:3001/api/create-task', {
         method: 'POST',

@@ -505,6 +505,8 @@ router.post("/project/:id/add-user", authenticateUser, async (req, res) => {
 });
 
 
+// PARA LAS ACTIVIDADES DEL PROYECTO
+
 // Crear una actividad de un proyecto
 router.post("/create-activity", authenticateUser, async (req, res) => {
   try {
@@ -599,6 +601,52 @@ router.get("/activity/:id", authenticateUser, async (req, res) => {
   }
 });
 
+// Actualizar una actividad
+// Solo los administradores de proyecto pueden editar actividades
+router.put("/activity/:id", authenticateUser, async (req, res) => {
+  const activityId = parseInt(req.params.id);
+  const { name, description } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input('activityId', sql.Int, activityId)
+      .query(`SELECT projectid FROM Activities WHERE id = @activityId`);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Actividad no encontrada' });
+    }
+
+    const projectId = result.recordset[0].projectid;
+
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`SELECT rol FROM RolesProyecto WHERE userid = @userId AND projectid = @projectId`);
+
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+      return res.status(403).json({ success: false, message: 'No autorizado para editar esta actividad' });
+    }
+
+    await pool.request()
+      .input('activityId', sql.Int, activityId)
+      .input('name', sql.VarChar, name)
+      .input('description', sql.VarChar, description)
+      .query(`
+        UPDATE Activities
+        SET name = @name, description = @description
+        WHERE id = @activityId
+      `);
+
+    res.json({ success: true, message: 'Actividad actualizada' });
+
+  } catch (err) {
+    console.error("Error al actualizar actividad:", err);
+    res.status(500).json({ success: false, message: 'Error al actualizar actividad' });
+  }
+});
 
 // Eliminar una actividad
 router.delete('/activity/:id', authenticateUser, async (req, res) => {
@@ -615,5 +663,300 @@ router.delete('/activity/:id', authenticateUser, async (req, res) => {
   }
 });
 
+// REQUERIMIENTOS
+
+// Obtener requerimientos de un proyecto
+router.get('/project/:id/requirements', authenticateUser, async (req, res) => {
+  const projectId = req.params.id;  
+  const userId = req.user.id;
+  try {
+    const pool = await poolPromise;
+    // Verificar que el usuario tiene rol en el proyecto
+    // Obtener requerimientos del proyecto
+    const requirementsResult = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT id, code, description, type, status, projectid, creator, date
+        FROM Requerimientos
+        WHERE projectid = @projectId
+      `);
+    res.json({ success: true, requirements: requirementsResult.recordset });
+  } catch (err) {
+    console.error('Error al obtener requerimientos:', err);
+    res.status(500).json({ success: false, message: 'Error al obtener requerimientos' });
+  }
+});
+
+// Crear un requerimiento
+router.post('/create-requirement', authenticateUser, async (req, res) => {
+  try {
+    const { code, description, type, status, projectid, creator, date } = req.body;
+  const pool = await poolPromise;
+
+  // Validar fecha
+  let parsedDate = null;
+  if (date) {
+    parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ success: false, message: 'Fecha no válida' });
+    }
+  }
+
+  await pool.request()
+    .input('code', sql.VarChar(50), code)
+    .input('description', sql.Text, description)
+    .input('type', sql.VarChar(50), type)
+    .input('status', sql.VarChar(50), status)
+    .input('projectid', sql.Int, projectid)
+    .input('creator', sql.VarChar(100), creator)
+    .input('date', sql.DateTime, parsedDate || new Date()) // usar fecha actual si no viene
+    .query(`
+      INSERT INTO Requerimientos (code, description, type, status, projectid, creator, date)
+      VALUES (@code, @description, @type, @status, @projectid, @creator, @date)
+    `);
+
+
+    res.json({ success: true, message: 'Requerimiento creado exitosamente' });
+  } catch (err) {
+    console.error('Error al crear requerimiento:', err);
+    res.status(500).json({ success: false, message: 'Error al crear requerimiento' });
+  }
+});
+
+// Obtener un requerimiento por ID
+router.get("/requirement/:id", authenticateUser, async (req, res) => {
+  const requirementId = parseInt(req.params.id);
+  const userId = req.user.id;
+
+  console.log("ID de requerimiento:", requirementId);
+
+  try {
+    const pool = await poolPromise;
+
+    // Obtener el requerimiento
+    const result = await pool.request()
+      .input('requirementId', sql.Int, requirementId)
+      .query(`
+        SELECT id, code, description, projectid 
+        FROM Requerimientos 
+        WHERE id = @requirementId
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Requerimiento no encontrado' });
+    }
+
+    const requirement = result.recordset[0];
+
+    // Verificar permisos del usuario
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, requirement.projectid)
+      .query(`
+        SELECT rol FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+      return res.status(403).json({ success: false, message: 'No autorizado para ver este requerimiento' });
+    }
+
+    res.json({ success: true, requirement });
+
+  } catch (err) {
+    console.error("Error al obtener requerimiento:", err);
+    res.status(500).json({ success: false, message: 'Error al obtener requerimiento' });
+  }
+});
+
+// Actualizar un requerimiento
+// Solo los administradores de proyecto pueden editar requerimientos
+router.put("/requirement/:id", authenticateUser, async (req, res) => {
+  const requirementId = parseInt(req.params.id);
+  const { code, description } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Obtener el proyecto asociado al requerimiento
+    const result = await pool.request()
+      .input('requirementId', sql.Int, requirementId)
+      .query(`SELECT projectid FROM Requerimientos WHERE id = @requirementId`);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Requerimiento no encontrado' });
+    }
+
+    const projectId = result.recordset[0].projectid;
+
+    // Verificar el rol del usuario en el proyecto
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol 
+        FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+      return res.status(403).json({ success: false, message: 'No autorizado para editar este requerimiento' });
+    }
+
+    // Actualizar el requerimiento
+    await pool.request()
+      .input('requirementId', sql.Int, requirementId)
+      .input('code', sql.VarChar, code)
+      .input('description', sql.VarChar, description)
+      .query(`
+        UPDATE Requerimientos
+        SET code = @code, description = @description
+        WHERE id = @requirementId
+      `);
+
+    res.json({ success: true, message: 'Requerimiento actualizado' });
+
+  } catch (err) {
+    console.error("Error al actualizar requerimiento:", err);
+    res.status(500).json({ success: false, message: 'Error al actualizar requerimiento' });
+  }
+});
+
+// Eliminar un requerimiento
+router.delete('/requirement/:id', authenticateUser, async (req, res) => {
+  const requirementId = req.params.id;
+
+  try {
+    const pool = await poolPromise;
+    await pool.request()
+      .input('requirementId', sql.Int, requirementId)
+      .query('DELETE FROM Requerimientos WHERE id = @requirementId');  // Cambiar a Requerimientos
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error al eliminar requerimiento:', err);
+    res.status(500).json({ success: false, message: 'Error al eliminar el requerimiento' });
+  }
+});
+
+// TAREAS
+
+// Obtener tareas de una actividad
+router.get('/activity/:id/tasks', authenticateUser, async (req, res) => {
+  const activityId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Verificar que el usuario tiene rol en el proyecto
+    const userHasAccess = await pool.request()
+      .input('activityId', sql.Int, activityId)
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT 1 
+        FROM Activities a
+        JOIN Projects p ON a.projectid = p.id
+        JOIN RolesProyecto rp ON p.id = rp.projectid
+        WHERE a.id = @activityId AND rp.userid = @userId
+      `);
+
+    if (userHasAccess.recordset.length === 0) {
+      return res.status(403).json({ success: false, message: 'No tienes acceso a esta actividad' });
+    }
+
+    // Obtener tareas de la actividad
+    const tasksResult = await pool.request()
+      .input('activityId', sql.Int, activityId)
+      .query(`
+        SELECT id, name, description, activityid
+        FROM Tasks
+        WHERE activityid = @activityId
+      `);
+    res.json({ success: true, tasks: tasksResult.recordset });
+  } catch (error) { 
+    console.error('Error al obtener tareas:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener tareas' });
+  }
+});
+
+router.post("/create-task", authenticateUser, async (req, res) => {
+  try {
+    const { name, description, date, status, assigned, activityid } = req.body;
+    const userId = req.user.userId;
+
+    if (!name || !activityid) {
+      return res.status(400).json({
+        success: false,
+        message: "Faltan campos obligatorios: name o activityid."
+      });
+    }
+
+    const pool = await poolPromise;
+    const request = pool.request();
+
+    await request
+      .input("title", sql.NVarChar, name) // map 'name' to 'title' in DB
+      .input("description", sql.NVarChar, description || null)
+      .input("date", sql.Date, date || null)
+      .input("status", sql.NVarChar, status || 'Pendiente')
+      .input("assigned", sql.Int, assigned ? parseInt(assigned) : null)
+      .input("activityid", sql.Int, parseInt(activityid))
+      .query(`
+        INSERT INTO Tasks (title, description, date, status, assigned, activityid)
+        VALUES (@title, @description, @date, @status, @assigned, @activityid)
+      `);
+
+    res.json({ success: true, message: "Tarea creada correctamente." });
+  } catch (error) {
+    console.error("Error al crear la tarea:", error.message);
+    res.status(500).json({ success: false, message: "Error al crear la tarea." });
+  }
+});
+
+
+
+// Actualizar una tarea
+router.put("/task/:id", authenticateUser, async (req, res) => {
+  const taskId = parseInt(req.params.id);
+  const { name, description } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    await pool.request()
+      .input('taskId', sql.Int, taskId)
+      .input('name', sql.VarChar, name)
+      .input('description', sql.VarChar, description)
+      .query(`
+        UPDATE Tasks
+        SET name = @name, description = @description
+        WHERE id = @taskId
+      `);
+
+    res.json({ success: true, message: 'Tarea actualizada' });
+
+  } catch (err) {
+    console.error("Error al actualizar tarea:", err);
+    res.status(500).json({ success: false, message: 'Error al actualizar tarea' });
+  }
+});
+
+// Eliminar una tarea
+router.delete('/task/:id', authenticateUser, async (req, res) => {
+  const taskId = req.params.id;
+  try {
+    const pool = await poolPromise;
+    await pool.request()
+      .input('taskId', sql.Int, taskId)
+      .query('DELETE FROM Tasks WHERE id = @taskId');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error al eliminar tarea:', err);
+    res.status(500).json({ success: false, message: 'Error al eliminar la tarea' });
+  }
+});
 
 module.exports = router;

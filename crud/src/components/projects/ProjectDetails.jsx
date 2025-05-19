@@ -7,11 +7,13 @@ function ProjectDetails() {
   const { id } = useParams();
   const [project, setProject] = useState(null);
   const [activities, setActivities] = useState([]);
+  const [requirements, setRequirements] = useState([]);
   const [error, setError] = useState('');
   const [rolUsuario, setRolUsuario] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+
     // Cargar detalles del proyecto
     const fetchProject = async () => {
       try {
@@ -27,6 +29,28 @@ function ProjectDetails() {
         setRolUsuario(data.rol);
       } catch (err) {
         setError(err.message);
+      }
+    };
+
+    // Cargar requerimientos del proyecto
+    const fetchRequirements = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/api/project/${id}/requirements`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('username')}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: No se encontraron requerimientos`);
+        }
+
+        const data = await response.json();
+        setRequirements(data.requirements || []);
+      } catch (err) {
+        console.error("Error al cargar requerimientos:", err);
+        setRequirements([]);
       }
     };
 
@@ -47,9 +71,35 @@ function ProjectDetails() {
       }
     };
 
+    fetchRequirements();
     fetchProject();
     fetchActivities();
   }, [id]);
+
+  // Función para eliminar requerimiento
+  const handleDeleteRequirement = async (requirementId) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este requerimiento?')) return;
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/requirement/${requirementId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('username')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar el requerimiento');
+      }
+
+      setRequirements(prev => prev.filter(req => req.id !== requirementId));
+      alert('Requerimiento eliminado con éxito');
+    } catch (err) {
+      console.error('Error al eliminar requerimiento:', err);
+      alert(err.message);
+    }
+  };
 
   // Función para eliminar actividad
   const handleDeleteActivity = async (activityId) => {
@@ -76,8 +126,6 @@ function ProjectDetails() {
     }
   };
 
-
-
   if (error) return <div>Error: {error}</div>;
   if (!project) return <div>Cargando...</div>;
 
@@ -99,6 +147,43 @@ function ProjectDetails() {
             </>
           )}
           <button onClick={() => navigate('/dashboard')}>Volver</button>
+
+        {/* Sección de requerimientos */}
+        <div className="requirements-section" style={{ marginTop: '40px' }}>
+          <h3>Requerimientos del Proyecto</h3>
+          {requirements.length === 0 ? (
+            <p>No hay requerimientos registrados aún.</p>
+          ) : (
+            <ul className="requirement-list">
+              {requirements.map((req) => (
+                <li key={req.id} className="requirement-item">
+                  <h4>{req.name}</h4>
+                  <p>{req.description || 'Sin detalles'}</p>
+
+                  {rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto' ? (
+                    <>
+                    <button
+                      className="button button-small"
+                      onClick={() => handleDeleteRequirement(req.id)}
+                    >
+                      Eliminar Requerimiento
+                    </button>
+
+                    <button
+                      className="button button-small"
+                      onClick={() => navigate(`/project/${id}/requirement/${req.id}/edit`)}
+                    >
+                      Editar Requerimiento
+                    </button>
+
+                    </>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+          
         </div>
 
         {/* Sección de actividades */}
@@ -107,29 +192,36 @@ function ProjectDetails() {
           {activities.length === 0 ? (
             <p>No hay actividades registradas aún.</p>
           ) : (
-            <ul className="activity-list">
-                              {activities.map((act) => (
-                  <li key={act.id} className="activity-item">
-                    <h4>{act.name}</h4>
-                    <p>{act.description || 'Sin descripción'}</p>
+                        <ul className="activity-list">
+              {activities.map((act) => (
+                <li key={act.id} className="activity-item">
+                  <h4>{act.name}</h4>
+                  <p>{act.description || 'Sin descripción'}</p>
 
-                    <div className="activity-buttons" style={{ marginTop: '10px' }}>
-                      <button
-                        className="button button-small"
-                        onClick={() => handleDeleteActivity(act.id)}
-                      >
-                        Eliminar Actividad
-                      </button>
+                  <div className="activity-buttons" style={{ marginTop: '10px' }}>
+                    <button
+                      className="button button-small"
+                      onClick={() => handleDeleteActivity(act.id)}
+                    >
+                      Eliminar Actividad
+                    </button>
 
-                      <button
-                        className="button"
-                        onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}
-                      >
-                        Agregar Tarea
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                    <button
+                      className="button button-small"
+                      onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}
+                    >
+                      Editar Actividad
+                    </button>
+
+                    <button
+                      className="button"
+                      onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}
+                    >
+                      Agregar Tarea
+                    </button>
+                  </div>
+                </li>
+              ))}
             </ul>
           )}
         </div>
