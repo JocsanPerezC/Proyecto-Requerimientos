@@ -141,11 +141,11 @@ function ProjectDetails() {
           {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
             <>
               <button className="button" onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
-              <button className="button" onClick={() => navigate(`/project/${id}/users`)}>Ver Usuarios</button>
               <button className="button" onClick={() => navigate(`/project/${id}/add-requirement`)}>Agregar Requerimiento</button>
               <button className="button" onClick={() => navigate(`/project/${id}/add-activities`)}>Agregar Actividad</button>
             </>
           )}
+          <button className="button" onClick={() => navigate(`/project/${id}/users`)}>Ver Usuarios</button>
           <button onClick={() => navigate('/dashboard')}>Volver</button>
 
         {/* Sección de requerimientos */}

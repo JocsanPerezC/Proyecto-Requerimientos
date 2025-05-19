@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
@@ -5,12 +6,12 @@ import { ProjectRoleContext } from '../Projects/ProjectRoleContext';
 import WithProjectRole from '../Projects/WithProjectRole';
 
 function EditUserRole() {
-  const { id, userid } = useParams();
+  const { id, userId } = useParams();
   const [rol, setRol] = useState('Lider de Proyecto');
   const { rol: miRol, refetchRol } = useContext(ProjectRoleContext);
   const currentUserId = parseInt(localStorage.getItem('userid'));
   const navigate = useNavigate();
-  console.log('miRol', miRol);
+  console.log(userId, 'userid', id, 'id');
   const [message, setMessage] = useState('');
 
   // Verificar permisos al cargar la página
@@ -22,7 +23,7 @@ function EditUserRole() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch(`http://localhost:3001/api/project/${id}/users/${userid}/role`, {
+    const res = await fetch(`http://localhost:3001/api/project/${id}/users/${userId}/role`, {
         method: 'PUT',
         headers: {
         'Content-Type': 'application/json',
@@ -39,9 +40,9 @@ function EditUserRole() {
         setMessage('Rol actualizado');
 
         // Si el usuario editado es el mismo que está logueado...
-        console.log('userid', userid, 'currentUserId', currentUserId);
-        if (parseInt(userid) === currentUserId) {
-            console.log('dentro', userid);
+        console.log('userid', userId, 'currentUserId', currentUserId);
+        if (parseInt(userId) === currentUserId) {
+            console.log('dentro', userId);
             await refetchRol(); // recarga el rol actualizado
 
             // Si ya no tiene permisos, redirigirlo
@@ -53,7 +54,7 @@ function EditUserRole() {
             }
         }
 
-        setTimeout(() => navigate(`/project/${id}/users/${userid}`), 1000);
+        setTimeout(() => navigate(`/project/${id}/users/${userId}`), 1000);
     }
     };
     
@@ -83,7 +84,7 @@ function EditUserRole() {
           <option value="Gerente">Gerente</option>
         </select>
         <button type="submit">Guardar</button>
-        <button type="button" onClick={() => navigate(`/project/${id}/users`)}>Cancelar</button>
+        <button type="button" onClick={() => navigate(`/project/${id}/users/${userId}`)}>Cancelar</button>
       </form>
       {message && <p>{message}</p>}
     </div>

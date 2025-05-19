@@ -155,19 +155,47 @@ router.put("/user/edit", authenticateUser, async (req, res) => {
 });
 
 // Obtener todos los usuarios de un proyecto
+
 router.get("/project/:id/users", authenticateUser, async (req, res) => {
+  const projectId = parseInt(req.params.id);
+  const userId = req.user.id;
+
   try {
-    const projectid = parseInt(req.params.id);
     const pool = await poolPromise;
+
     const result = await pool.request()
-      .input('projectid', sql.Int, projectid)
+      .input('projectId', sql.Int, projectId)
       .query(`
-        SELECT u.id, u.username, u.name, u.lastname, u.email, u.emergencycontact, pm.rol
+        SELECT u.id, u.username, u.name, u.lastname, u.email, u.emergencycontact, pm.rol, pm.projectid
         FROM Users u
         JOIN RolesProyecto pm ON pm.userid = u.id
-        WHERE pm.projectid = @projectid
+        WHERE pm.projectid = @projectId
       `);
-    res.json({ success: true, users: result.recordset });
+
+    const rolResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol FROM RolesProyecto
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    const rolActual = rolResult.recordset[0]?.rol || null;
+        
+     const projectResult = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+      SELECT completed FROM Projects WHERE id = @projectId
+      `);
+
+    const completed = projectResult.recordset[0]?.completed || null;
+
+    res.json({ 
+      success: true, 
+      users: result.recordset, 
+      rolActual,
+      completed
+     });
   } catch (err) {
     console.error("Error al obtener usuarios del proyecto:", err);
     res.status(500).json({ success: false, message: 'Error al obtener usuarios' });
@@ -252,7 +280,7 @@ router.get("/projects", authenticateUser, async (req, res) => {
       .input('userId', sql.Int, userId)
       .query(`
         SELECT 
-          p.id, p.name, p.description, p.date,
+          p.id, p.name, p.description, p.date, p.completed,
           pm.rol
         FROM Projects p
         INNER JOIN RolesProyecto pm ON p.id = pm.projectid
@@ -915,8 +943,6 @@ router.post("/create-task", authenticateUser, async (req, res) => {
   }
 });
 
-
-
 // Actualizar una tarea
 router.put("/task/:id", authenticateUser, async (req, res) => {
   const taskId = parseInt(req.params.id);
@@ -956,6 +982,44 @@ router.delete('/task/:id', authenticateUser, async (req, res) => {
   } catch (err) {
     console.error('Error al eliminar tarea:', err);
     res.status(500).json({ success: false, message: 'Error al eliminar la tarea' });
+  }
+});
+
+router.put("/project/:id/entregar", authenticateUser, async (req, res) => {
+  const projectId = parseInt(req.params.id);
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Verificar si es administrador del proyecto
+    const roleCheck = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol FROM RolesProyecto
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    const role = roleCheck.recordset[0]?.rol;
+    if (role !== 'Administrador de Proyecto') {
+      return res.status(403).json({ message: 'Solo administradores pueden entregar el proyecto' });
+    }
+
+    // Actualizar la fecha de entrega al día actual
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        UPDATE Projects
+        SET completed = GETDATE()
+        WHERE id = @projectId
+      `);
+
+    res.json({ success: true, message: 'Proyecto entregado correctamente' });
+
+  } catch (err) {
+    console.error("Error entregando proyecto:", err);
+    res.status(500).json({ message: 'Error al entregar el proyecto' });
   }
 });
 

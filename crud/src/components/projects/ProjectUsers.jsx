@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 function ProjectUsers() {
   const { id } = useParams(); // projectId
+  const [rolActual, setRolActual] = useState('');
+  const [completed, setcompleted] = useState(null);
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const currentUserId = parseInt(localStorage.getItem('userid'));
@@ -11,11 +13,14 @@ function ProjectUsers() {
     const fetchUsers = async () => {
       const res = await fetch(`http://localhost:3001/api/project/${id}/users`, {
         headers: {
+          method: 'GET',
           Authorization: `Bearer ${localStorage.getItem('username')}`
         }
       });
       const data = await res.json();
       setUsers(data.users);
+      setRolActual(data.rolActual);
+      setcompleted(data.completed);
     };
     fetchUsers();
   }, [id]);
@@ -52,11 +57,9 @@ const handleRemoveUser = async (userIdToRemove) => {
         <div key={user.id} className="user-box">
           <p><strong>{user.username}</strong> - Rol: {user.rol}</p>
           <button onClick={() => navigate(`/project/${id}/users/${user.id}`)}>Ver Perfil</button>
-            {user.id !== currentUserId && (
+            {(user.id !== currentUserId && (rolActual === 'Administrador de Proyecto' || rolActual === 'Lider de Proyecto')) &&
+              !completed && ( 
                 <>
-                    <button onClick={() => navigate(`/project/${id}/users/${user.id}/edit`)}>
-                    Editar Rol
-                    </button>
                     <button
                     style={{ backgroundColor: '#dc3545', color: 'white', marginLeft: '10px' }}
                     onClick={() => handleRemoveUser(user.id)}

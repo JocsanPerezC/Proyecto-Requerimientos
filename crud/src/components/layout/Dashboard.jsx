@@ -77,6 +77,30 @@ function Dashboard() {
     return <div className="container">Cargando proyectos...</div>;
   }
 
+  const handleEntregarProyecto = async (projectId) => {
+    if (!window.confirm("¿Estás seguro de que deseas entregar este proyecto?")) return;
+
+    try {
+      const res = await fetch(`http://localhost:3001/api/project/${projectId}/entregar`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('username')}`
+        }
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      alert("Proyecto entregado con éxito");
+      // Actualizar proyectos localmente
+      setProjects(prev =>
+        prev.map(p => p.id === projectId ? { ...p, completed: new Date().toISOString() } : p)
+      );
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
   return (
     <>
     <Topbar />
@@ -96,6 +120,7 @@ function Dashboard() {
                     <p>{project.description}</p>
                     <p><strong>Tu rol:</strong> {project.rol}</p>
                     <p><strong>Fecha de inicio:</strong> {new Date(project.date).toLocaleString('es-ES', { timeZone: 'UTC', dateStyle: 'short' })}</p>
+                    <p><strong>Fecha de entrega:</strong> {project.completed ? new Date(project.completed).toLocaleDateString() : 'No entregado'}</p>
                     <div className="buttongroup">
                       <button 
                       onClick={() => navigate(`/project/${project.id}`)}
@@ -103,24 +128,27 @@ function Dashboard() {
                       Ver detalles
                       </button>
 
-                      {project.rol === 'Administrador de Proyecto' && (
+                      {(project.rol === 'Administrador de Proyecto' || project.rol === 'Lider de Proyecto')&& !project.completed && (
                         <>
-                        <button 
-                          onClick={() => navigate(`/project/${project.id}/edit`)}
-                          style={{ backgroundColor: '#007bff', color: 'white', marginLeft: '10px' }}
+                          <button onClick={() => navigate(`/project/${project.id}/edit`)}>
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleEntregarProyecto(project.id)}
+                            style={{ backgroundColor: '#28a745', color: 'white', marginLeft: '10px' }}
                         >
-                          Editar
-                        </button>
-
-                        <button
-                          className="delete-btn"
-                          style={{ backgroundColor: '#dc3545', color: 'white', marginLeft: '10px' }}
-                          onClick={() => handleDeleteProject(project.id)}
-                          >
-                          Eliminar
-                        </button>
+                          Entregar Proyecto
+                          </button>
                         </>
                       )}
+                      {(project.rol === 'Administrador de Proyecto' || project.rol === 'Lider de Proyecto') && (
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            style={{ backgroundColor: '#dc3545', color: 'white', marginLeft: '10px' }}
+                          >
+                            Eliminar
+                          </button>
+                        )}
                     </div>
                 </li>
                 ))}
