@@ -154,6 +154,7 @@ router.put("/user/edit", authenticateUser, async (req, res) => {
   }
 });
 
+// Obtener todos los usuarios de un proyecto
 router.get("/project/:id/users", authenticateUser, async (req, res) => {
   try {
     const projectid = parseInt(req.params.id);
@@ -265,6 +266,7 @@ router.get("/projects", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al cargar los proyectos' });
   }
 });
+
 
 // Crear un nuevo proyecto
 router.post("/create-project", authenticateUser, async (req, res) => {
@@ -501,5 +503,117 @@ router.post("/project/:id/add-user", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error del servidor' });
   }
 });
+
+
+// Crear una actividad de un proyecto
+router.post("/create-activity", authenticateUser, async (req, res) => {
+  try {
+    const { name, description, projectid } = req.body;
+    const userId = req.user.userId; // Puede usarse para trazabilidad si lo necesitas
+
+    if (!name || !projectid) {
+      return res.status(400).json({ success: false, message: "Faltan campos obligatorios: name o projectid." });
+    }
+
+    const pool = await poolPromise;
+    
+    const request = pool.request();
+    await request
+      .input("name", sql.NVarChar, name)
+      .input("description", sql.NVarChar, description || null)
+      .input("projectid", sql.Int, projectid)
+      .query(`
+        INSERT INTO Activities (name, description, projectid)
+        VALUES (@name, @description, @projectid)
+      `);
+
+    res.json({ success: true, message: "Actividad creada correctamente." });
+  } catch (error) {
+    console.error("Error al crear la actividad:", error.message);
+    res.status(500).json({ success: false, message: "Error al crear la actividad." });
+  }
+});
+
+// Obtener actividades de un proyecto (solo si el usuario tiene acceso)
+router.get('/project/:id/activities', authenticateUser, async (req, res) => {
+  const projectId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Verificar que el usuario tiene rol en el proyecto
+    const userHasAccess = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT 1 
+        FROM RolesProyecto 
+        WHERE projectid = @projectId AND userid = @userId
+      `);
+
+    if (userHasAccess.recordset.length === 0) {
+      return res.status(403).json({ success: false, message: 'No tienes acceso a este proyecto' });
+    }
+
+    // Obtener actividades del proyecto
+    const result = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT id, name, description, projectid, fatherid
+        FROM Activities
+        WHERE projectid = @projectId
+      `);
+
+    res.json({ success: true, activities: result.recordset });
+  } catch (error) {
+    console.error('Error al obtener actividades:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener actividades' });
+  }
+});
+
+// Obtener una actividad por su ID
+router.get("/activity/:id", authenticateUser, async (req, res) => {
+  const activityId = req.params.id;
+  console.log("ID de actividad:", activityId);
+  try {
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('activityId', sql.Int, activityId)
+      .query(`
+        SELECT id, name, description, projectid
+        FROM Activities
+        WHERE id = @activityId
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Actividad no encontrada' });
+    }
+
+    const activity = result.recordset[0];
+    res.json({ success: true, activity });
+  } catch (err) {
+    console.error("Error al obtener la actividad:", err);
+    res.status(500).json({ success: false, message: 'Error al obtener la actividad' });
+  }
+});
+
+
+// Eliminar una actividad
+router.delete('/activity/:id', authenticateUser, async (req, res) => {
+  const activityId = req.params.id;
+  try {
+    const pool = await poolPromise;
+    await pool.request()
+      .input('activityId', sql.Int, activityId)
+      .query('DELETE FROM Activities WHERE id = @activityId');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error al eliminar actividad:', err);
+    res.status(500).json({ success: false, message: 'Error al eliminar la actividad' });
+  }
+});
+
 
 module.exports = router;
