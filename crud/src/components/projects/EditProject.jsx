@@ -55,9 +55,9 @@ function EditProject() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2>Editar Proyecto</h2>
-      <form onSubmit={handleSubmit}>
+      <form className="form-group"onSubmit={handleSubmit}>
         <input name="name" value={project.name} onChange={handleChange} placeholder="Nombre" required />
         <textarea name="description" value={project.description} onChange={handleChange} placeholder="Descripción" />
         <input type="date" name="date" value={project.date} onChange={handleChange} required />

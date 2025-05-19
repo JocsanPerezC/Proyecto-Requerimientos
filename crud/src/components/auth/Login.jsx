@@ -33,7 +33,7 @@ function Login() {
   };
 
   return (
-    <div className = "container">
+    <div className = "container-login">
       <h2 className ="titulo"> Iniciar Sesión</h2>
       <form onSubmit={handleLogin}>
         <input
@@ -50,7 +50,7 @@ function Login() {
           onChange={(e) => setPassword(e.target.value)}
           required
         /><br /><br />
-        <button type="submit">Entrar</button>
+        <button className = "buttoncenter" type="submit">Entrar</button>
       </form>
       <p style={{ color: 'red' }}>{msg}</p>
       <p className="links">¿No tienes cuenta? <Link to="/register">Regístrate</Link></p>

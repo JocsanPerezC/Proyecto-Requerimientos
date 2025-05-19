@@ -5,6 +5,8 @@ import '../../styles/style.css';
 
 function ProjectDetails() {
   const { id } = useParams();
+  const [requirementsOpen, setRequirementsOpen] = useState(false);
+  const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [project, setProject] = useState(null);
   const [activities, setActivities] = useState([]);
   const [requirements, setRequirements] = useState([]);
@@ -100,7 +102,7 @@ function ProjectDetails() {
       alert(err.message);
     }
   };
-
+  
   // Función para eliminar actividad
   const handleDeleteActivity = async (activityId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return;
@@ -136,94 +138,119 @@ function ProjectDetails() {
         <h2>{project.name}</h2>
         <p>{project.description}</p>
         <p><strong>Fecha de inicio:</strong> {new Date(project.date).toLocaleDateString()}</p>
-
-        <div className="buttongroup">
+        
+        <div>
           {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
-            <>
-              <button className="button" onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
-              <button className="button" onClick={() => navigate(`/project/${id}/add-requirement`)}>Agregar Requerimiento</button>
-              <button className="button" onClick={() => navigate(`/project/${id}/add-activities`)}>Agregar Actividad</button>
-            </>
+              <button className="buttonproject" onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
           )}
-          <button className="button" onClick={() => navigate(`/project/${id}/users`)}>Ver Usuarios</button>
-          <button onClick={() => navigate('/dashboard')}>Volver</button>
-
-        {/* Sección de requerimientos */}
-        <div className="requirements-section" style={{ marginTop: '40px' }}>
-          <h3>Requerimientos del Proyecto</h3>
-          {requirements.length === 0 ? (
-            <p>No hay requerimientos registrados aún.</p>
-          ) : (
-            <ul className="requirement-list">
-              {requirements.map((req) => (
-                <li key={req.id} className="requirement-item">
-                  <h4>{req.name}</h4>
-                  <p>{req.description || 'Sin detalles'}</p>
-
-                  {rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto' ? (
-                    <>
-                    <button
-                      className="button button-small"
-                      onClick={() => handleDeleteRequirement(req.id)}
-                    >
-                      Eliminar Requerimiento
-                    </button>
-
-                    <button
-                      className="button button-small"
-                      onClick={() => navigate(`/project/${id}/requirement/${req.id}/edit`)}
-                    >
-                      Editar Requerimiento
-                    </button>
-
-                    </>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
+          <button className="buttonproject" onClick={() => navigate(`/project/${id}/users`)}>Ver Usuarios</button>
+          <button className="buttonproject" onClick={() => navigate('/dashboard')}>Volver</button>
         </div>
-          
+        
+        {/* Sección desplegable de requerimientos */}
+        <div className="collapsible-section">
+          <div 
+            className="section-header" 
+            onClick={() => setRequirementsOpen(!requirementsOpen)}
+          >
+            <h3>
+              Requerimientos del Proyecto
+              <span className="item-count">{requirements.length}</span>
+            </h3>
+            {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
+              <span className="button-count">
+                <button onClick={() => navigate(`/project/${id}/add-requirement`)}>Agregar Requerimiento</button>
+              </span>
+            )}
+            <span className={`toggle-icon ${requirementsOpen ? 'open' : ''}`}>▼</span>
+          </div>
+          <div className={`section-content ${requirementsOpen ? 'open' : ''}`}>
+            {requirements.length === 0 ? (
+              <p>No hay requerimientos registrados aún.</p>
+            ) : (
+              <ul className="requirement-list">
+                {requirements.map((req) => (
+                  <li key={req.id} className="requirement-item">
+                    <h4>Código: {req.code}</h4>
+                    <p>{req.description || 'Sin detalles'}</p>
+                    <p>Tipo: {req.type}</p>
+                    <p><strong>{req.status}</strong></p>
+                    {rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto' ? (
+                      <div className="requirement-buttons">
+                        <button
+                          className="button button-small"
+                          onClick={() => handleDeleteRequirement(req.id)}
+                        >
+                          Eliminar Requerimiento
+                        </button>
+                        <button
+                          className="button button-small"
+                          onClick={() => navigate(`/project/${id}/requirement/${req.id}/edit`)}
+                        >
+                          Editar Requerimiento
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
-
-        {/* Sección de actividades */}
-        <div className="activities-section" style={{ marginTop: '40px' }}>
-          <h3>Actividades del Proyecto</h3>
-          {activities.length === 0 ? (
-            <p>No hay actividades registradas aún.</p>
-          ) : (
-                        <ul className="activity-list">
-              {activities.map((act) => (
-                <li key={act.id} className="activity-item">
-                  <h4>{act.name}</h4>
-                  <p>{act.description || 'Sin descripción'}</p>
-
-                  <div className="activity-buttons" style={{ marginTop: '10px' }}>
-                    <button
-                      className="button button-small"
-                      onClick={() => handleDeleteActivity(act.id)}
-                    >
-                      Eliminar Actividad
-                    </button>
-
-                    <button
-                      className="button button-small"
-                      onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}
-                    >
-                      Editar Actividad
-                    </button>
-
-                    <button
-                      className="button"
-                      onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}
-                    >
-                      Agregar Tarea
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+        
+        {/* Sección desplegable de actividades */}
+        <div className="collapsible-section">
+          <div 
+            className="section-header" 
+            onClick={() => setActivitiesOpen(!activitiesOpen)}
+          >
+            <h3>
+              Actividades del Proyecto
+              <span className="item-count">{activities.length}</span>
+            </h3>
+            {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
+              <span className="button-counta">
+                <button onClick={() => navigate(`/project/${id}/add-requirement`)}>Agregar Actividad</button>
+              </span>
+            )}
+            <span className={`toggle-icon ${activitiesOpen ? 'open' : ''}`}>▼</span>
+          </div>
+          <div className={`section-content ${activitiesOpen ? 'open' : ''}`}>
+            {activities.length === 0 ? (
+              <p>No hay actividades registradas aún.</p>
+            ) : (
+              <ul className="activity-list">
+                {activities.map((act) => (
+                  <li key={act.id} className="activity-item">
+                    <h4>{act.name}</h4>
+                    <p>{act.description || 'Sin descripción'}</p>
+                    {rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto' ? (
+                      <div className="activity-buttons">
+                        <button
+                          className="button button-small"
+                          onClick={() => handleDeleteActivity(act.id)}
+                        >
+                          Eliminar Actividad
+                        </button>
+                        <button
+                          className="button button-small"
+                          onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}
+                        >
+                          Editar Actividad
+                        </button>
+                        <button
+                          className="button button-small"
+                          onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}
+                        >
+                          Agregar Tarea
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     </>

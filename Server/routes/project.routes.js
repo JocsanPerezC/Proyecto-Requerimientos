@@ -718,31 +718,48 @@ router.get('/project/:id/requirements', authenticateUser, async (req, res) => {
 // Crear un requerimiento
 router.post('/create-requirement', authenticateUser, async (req, res) => {
   try {
-    const { code, description, type, status, projectid, creator, date } = req.body;
-  const pool = await poolPromise;
+    const { code, description, type, status, projectid, date } = req.body;
+    const creator = req.user.id; // ← Obtener ID del usuario autenticado
 
-  // Validar fecha
-  let parsedDate = null;
-  if (date) {
-    parsedDate = new Date(date);
-    if (isNaN(parsedDate.getTime())) {
-      return res.status(400).json({ success: false, message: 'Fecha no válida' });
+    const pool = await poolPromise;
+
+    // Validar si ya existe un requerimiento con ese código en el mismo proyecto
+    const duplicateCheck = await pool.request()
+      .input('code', sql.VarChar(50), code)
+      .input('projectid', sql.Int, projectid)
+      .query(`
+        SELECT id FROM Requerimientos 
+        WHERE code = @code AND projectid = @projectid
+      `);
+
+    if (duplicateCheck.recordset.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe un requerimiento con ese código en este proyecto.'
+      });
     }
-  }
 
-  await pool.request()
-    .input('code', sql.VarChar(50), code)
-    .input('description', sql.Text, description)
-    .input('type', sql.VarChar(50), type)
-    .input('status', sql.VarChar(50), status)
-    .input('projectid', sql.Int, projectid)
-    .input('creator', sql.VarChar(100), creator)
-    .input('date', sql.DateTime, parsedDate || new Date()) // usar fecha actual si no viene
-    .query(`
-      INSERT INTO Requerimientos (code, description, type, status, projectid, creator, date)
-      VALUES (@code, @description, @type, @status, @projectid, @creator, @date)
-    `);
+    // Validar fecha
+    let parsedDate = null;
+    if (date) {
+      parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ success: false, message: 'Fecha no válida' });
+      }
+    }
 
+    await pool.request()
+      .input('code', sql.VarChar(50), code)
+      .input('description', sql.Text, description)
+      .input('type', sql.VarChar(50), type)
+      .input('status', sql.VarChar(50), status)
+      .input('projectid', sql.Int, projectid)
+      .input('creator', sql.Int, creator) // ← Guardar como entero
+      .input('date', sql.DateTime, parsedDate || new Date()) // usar fecha actual si no viene
+      .query(`
+        INSERT INTO Requerimientos (code, description, type, status, projectid, creator, date)
+        VALUES (@code, @description, @type, @status, @projectid, @creator, @date)
+      `);
 
     res.json({ success: true, message: 'Requerimiento creado exitosamente' });
   } catch (err) {
@@ -765,7 +782,7 @@ router.get("/requirement/:id", authenticateUser, async (req, res) => {
     const result = await pool.request()
       .input('requirementId', sql.Int, requirementId)
       .query(`
-        SELECT id, code, description, projectid 
+        SELECT id, code, description, projectid, type, status
         FROM Requerimientos 
         WHERE id = @requirementId
       `);
@@ -797,11 +814,11 @@ router.get("/requirement/:id", authenticateUser, async (req, res) => {
   }
 });
 
-// Actualizar un requerimiento
+// Editar un requerimiento
 // Solo los administradores de proyecto pueden editar requerimientos
 router.put("/requirement/:id", authenticateUser, async (req, res) => {
   const requirementId = parseInt(req.params.id);
-  const { code, description } = req.body;
+  const { code, description, status, type } = req.body;
   const userId = req.user.id;
 
   try {
@@ -837,11 +854,18 @@ router.put("/requirement/:id", authenticateUser, async (req, res) => {
       .input('requirementId', sql.Int, requirementId)
       .input('code', sql.VarChar, code)
       .input('description', sql.VarChar, description)
+      .input('status', sql.VarChar, status)
+      .input('type', sql.VarChar, type)
       .query(`
         UPDATE Requerimientos
-        SET code = @code, description = @description
+        SET 
+          code = @code, 
+          description = @description, 
+          status = @status, 
+          type = @type
         WHERE id = @requirementId
       `);
+
 
     res.json({ success: true, message: 'Requerimiento actualizado' });
 

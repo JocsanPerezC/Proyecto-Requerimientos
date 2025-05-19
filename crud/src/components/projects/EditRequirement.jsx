@@ -4,7 +4,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 function EditRequirement() {
   const { id, requirementId } = useParams(); // id = id del proyecto, requirementId = id del requerimiento
   const navigate = useNavigate();
-  const [requirement, setRequirement] = useState({ code: '', description: '' });
+  const [requirement, setRequirement] = useState({
+  code: '',
+  description: '',
+  status: '',
+  type: ''
+  });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -17,10 +22,13 @@ function EditRequirement() {
         });
         const data = await res.json();
         if (res.ok) {
+          console.log('data', data);
           setRequirement({
-            code: data.requirement.code,
-            description: data.requirement.description || ''
-          });
+          code: data.requirement.code,
+          description: data.requirement.description || '',
+          status: data.requirement.status ,
+          type: data.requirement.type 
+        });
         } else {
           setMessage('No se pudo cargar el requerimiento');
         }
@@ -60,17 +68,33 @@ function EditRequirement() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2>Editar Requerimiento</h2>
       <form onSubmit={handleSubmit} className="project-form">
         <div className="form-group">
-          <label>Código</label>
-          <input name="code" value={requirement.code} onChange={handleChange} required />
+          <input name="code" value={requirement.code} onChange={handleChange}placeholder="Nombre" required />
         </div>
 
         <div className="form-group">
-          <label>Descripción</label>
-          <textarea name="description" value={requirement.description} onChange={handleChange} rows="4" />
+          <textarea name="description" value={requirement.description} onChange={handleChange} placeholder="Descripción" rows="4" />
+        </div>
+
+        <div className="form-group">
+          <label>Estado</label>
+          <p>{requirement.status}</p>
+          <select name="status" value={requirement.status} onChange={handleChange} required>
+            <option value="pendiente">Pendiente</option>
+            <option value="en progreso">En Progreso</option>
+            <option value="completado">Completado</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Tipo</label>
+          <select name="type" value={requirement.type} onChange={handleChange} required>
+            <option value="funcional">Funcional</option>
+            <option value="no funcional">No Funcional</option>
+          </select>
         </div>
 
         <div className="form-actions">

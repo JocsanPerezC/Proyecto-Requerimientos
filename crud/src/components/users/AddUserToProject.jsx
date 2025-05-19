@@ -38,7 +38,7 @@ function AddUserToProject() {
   };
 
   return (
-    <div className="container">
+    <div className="container-adduserproject">
       <h2>Agregar Usuario al Proyecto</h2>
       {message && <p>{message}</p>}
       <form onSubmit={handleSubmit}>
@@ -65,8 +65,8 @@ function AddUserToProject() {
           </select>
         </div>
         <div className="buttongroup">
-          <button type="submit">Agregar</button>
-          <button type="button" onClick={() => navigate(`/project/${id}`)}>Volver</button>
+          <button className="button" type="submit">Agregar</button>
+          <button className="button" type="button" onClick={() => navigate(`/project/${id}`)}>Volver</button>
         </div>
       </form>
       <p className='links'>¿Deseas registrar un usuario nuevo? <Link to= {`/register-project/${id}`}>Click aquí</Link></p>

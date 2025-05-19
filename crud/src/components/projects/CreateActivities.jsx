@@ -67,7 +67,7 @@ function CreateActivity() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2 className="titulo">Crear Nueva Actividad</h2>
       
       {error && <p className="error-message">{error}</p>}

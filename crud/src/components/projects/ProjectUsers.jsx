@@ -51,26 +51,28 @@ const handleRemoveUser = async (userIdToRemove) => {
 };
 
   return (
-    <div className="container">
-      <h2>Usuarios del Proyecto</h2>
-      {users.map(user => (
-        <div key={user.id} className="user-box">
+    <div className="container-users">
+    <h2>Usuarios del Proyecto</h2>
+    {users.map(user => (
+      <div key={user.id} className="user-box">
+        <div className="user-info">
           <p><strong>{user.username}</strong> - Rol: {user.rol}</p>
-          <button onClick={() => navigate(`/project/${id}/users/${user.id}`)}>Ver Perfil</button>
-            {(user.id !== currentUserId && (rolActual === 'Administrador de Proyecto' || rolActual === 'Lider de Proyecto')) &&
-              !completed && ( 
-                <>
-                    <button
-                    style={{ backgroundColor: '#dc3545', color: 'white', marginLeft: '10px' }}
-                    onClick={() => handleRemoveUser(user.id)}
-                    >
-                    Eliminar
-                    </button>
-                </>
-                )}
         </div>
+        <div className="user-actions">
+          <button onClick={() => navigate(`/project/${id}/users/${user.id}`)}>Ver Perfil</button>
+          {(user.id !== currentUserId && (rolActual === 'Administrador de Proyecto' || rolActual === 'Lider de Proyecto')) &&
+            !completed && (
+              <button
+                className="delete-button"
+                onClick={() => handleRemoveUser(user.id)}
+              >
+                Eliminar
+              </button>
+          )}
+        </div>
+      </div>
       ))}
-      <button onClick={() => navigate(`/project/${id}`)}>Volver</button>
+      <button className="button"onClick={() => navigate(`/project/${id}`)}>Volver</button>
     </div>
   );
 }

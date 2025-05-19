@@ -9,7 +9,6 @@ function CreateRequirement() {
     description: '',
     type: '',
     status: '',
-    creator: '',
     date: ''
   });
   const [error, setError] = useState('');
@@ -72,7 +71,7 @@ function CreateRequirement() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2 className="titulo">Crear Requerimiento</h2>
       
       {error && <p className="error-message">{error}</p>}
@@ -104,35 +103,34 @@ function CreateRequirement() {
 
         <div className="form-group">
           <label htmlFor="type">Tipo</label>
-          <input
+          <select
             type="text"
             id="type"
             name="type"
             value={requirementData.type}
             onChange={handleChange}
-          />
+            required
+          >
+            <option value="">Seleccionar estado</option>
+            <option value="Funcional">Funcional</option>
+            <option value="No Funcional">No Funcional</option>
+          </select>
         </div>
 
         <div className="form-group">
           <label htmlFor="status">Estado</label>
-          <input
+          <select
             type="text"
-            id="status"
             name="status"
             value={requirementData.status}
             onChange={handleChange}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="creator">Creador</label>
-          <input
-            type="text"
-            id="creator"
-            name="creator"
-            value={requirementData.creator}
-            onChange={handleChange}
-          />
+            required
+          >
+            <option value="">Seleccionar estado</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En progreso">En progreso</option>
+            <option value="Completada">Completada</option>
+          </select>
         </div>
 
         <div className="form-group">

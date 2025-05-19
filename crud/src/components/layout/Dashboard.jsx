@@ -130,7 +130,8 @@ function Dashboard() {
 
                       {(project.rol === 'Administrador de Proyecto' || project.rol === 'Lider de Proyecto')&& !project.completed && (
                         <>
-                          <button onClick={() => navigate(`/project/${project.id}/edit`)}>
+                          <button onClick={() => navigate(`/project/${project.id}/edit`)}
+                            style={{ marginLeft: '10px' }}>
                             Editar
                           </button>
                           <button

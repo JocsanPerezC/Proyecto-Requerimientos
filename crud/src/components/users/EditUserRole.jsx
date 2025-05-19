@@ -70,7 +70,7 @@ function EditUserRole() {
 
   return (
     <WithProjectRole> 
-    <div className="container">
+    <div className="container-login">
       <h2>Editar Rol del Usuario</h2>
       <form onSubmit={handleSubmit}>
         <select value={rol} onChange={e => setRol(e.target.value)}>

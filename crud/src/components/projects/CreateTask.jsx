@@ -116,7 +116,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2 className="titulo">Crear Nueva Tarea</h2>
 
       {error && <p className="error-message">{error}</p>}

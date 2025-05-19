@@ -26,7 +26,7 @@ function UserProjectProfile() {
   if (!user) return <div>Cargando...</div>;
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2>Perfil de {user.username}</h2>
       <p><strong>Nombre:</strong> {user.name}</p>
       <p><strong>Apellido:</strong> {user.lastname}</p>
