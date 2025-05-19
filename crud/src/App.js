@@ -1,25 +1,24 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/auth/Login';
-import Register from './components/auth/Register'; // Asumiendo que ya existe un componente de registro
-import Dashboard from './components/layout/Dashboard'; // Nuestro nuevo componente
-import CreateProject from './components/projects/CreateProject'; // Formulario de creación de proyecto
-import ProjectDetails from './components/projects/ProjectDetails'; // Detalles del proyecto
-import AddUserToProject from './components/users/AddUserToProject'; 
-import RegisterProject from './components/projects/RegisterProject'; // Registro de proyecto
+import Login from './Components/auth/Login';
+import Register from './Components/auth/Register'; // Asumiendo que ya existe un componente de registro
+import Dashboard from './Components/layout/Dashboard'; // Nuestro nuevo componente
+import CreateProject from './Components/Projects/CreateProject'; // Formulario de creación de proyecto
+import ProjectDetails from './Components/Projects/ProjectDetails'; // Detalles del proyecto
+import AddUserToProject from './Components/users/AddUserToProject'; 
+import RegisterProject from './Components/Projects/RegisterProject'; // Registro de proyecto
 import './styles/style.css'; // Estilos globales
-import Topbar from './components/layout/Topbar'; // Barra superior
-import UserProfileView from './components/users/UserProfileView';
-import UserProfileEdit from './components/users/UserProfileEdit';
-import { UserProvider } from './components/auth/UserContext';
-import AccountRecovery from './components/auth/AccountRecovery'; // Componente para recuperación de cuenta
-import ProjectUsers from './components/projects/ProjectUsers';
-import UserProjectProfile from './components/projects/UserProjectProfile';
-import EditUserRole from './components/users/EditUserRole';
-import WithProjectRole from './components/projects/WithProjectRole'; // Componente para verificar el rol del usuario en el proyecto
-import EditProject from './components/projects/EditProject';
+import Topbar from './Components/layout/Topbar'; // Barra superior
+import UserProfileView from './Components/users/UserProfileView';
+import UserProfileEdit from './Components/users/UserProfileEdit';
+import { UserProvider } from './Components/auth/UserContext';
+import AccountRecovery from './Components/auth/AccountRecovery'; // Componente para recuperación de cuenta
+import ProjectUsers from './Components/Projects/ProjectUsers';
+import UserProjectProfile from './Components/Projects/UserProjectProfile';
+import EditUserRole from './Components/users/EditUserRole';
+import WithProjectRole from './Components/Projects/WithProjectRole'; // Componente para verificar el rol del usuario en el proyecto
+import EditProject from './Components/Projects/EditProject';
 import CreateActivities from './Components/Projects/CreateActivities'; // Componente para crear actividades
-import CreateRequirement from './Components/Projects/CreateRequirement'; // Componente para crear requisitos
 import CreateTask from './Components/Projects/CreateTask'; // Componente para crear tareas
 // Importar otros componentes necesarios
 
@@ -37,7 +36,6 @@ function App() {
           <Route path="/project/:id" element={<ProjectDetails />} />
           <Route path="/project/:id/add-user" element={<AddUserToProject />} />
           <Route path="/register-project" element={<RegisterProject />} />
-          <Route path="/project/:id/add-requirement" element={<CreateRequirement />} />
           <Route path="/project/:id/add-activities" element={<CreateActivities />} />
           <Route path="/project/:id/activity/:activityId/add-task" element={<CreateTask />} />
           <Route path="/topbar" element={<Topbar />} />

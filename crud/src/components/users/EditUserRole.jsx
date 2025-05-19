@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
-import { ProjectRoleContext } from '../projects/ProjectRoleContext';
-import WithProjectRole from '../projects/WithProjectRole';
+import { ProjectRoleContext } from '../Projects/ProjectRoleContext';
+import WithProjectRole from '../Projects/WithProjectRole';
 
 function EditUserRole() {
   const { id, userid } = useParams();
