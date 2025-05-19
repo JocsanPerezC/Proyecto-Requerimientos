@@ -88,8 +88,8 @@ function Topbar() {
         {showMenu && (
           <div className="user-menu">
             <button onClick={() => navigate('/profile')}>Ver Perfil</button>
-            <button onClick={handleDelete} className="delete-btn">Eliminar Cuenta</button>
-            <button onClick={handleLogout} className="logout-btn">Cerrar Sesión</button>
+            <button onClick={handleDelete} className="logout-btn">Eliminar Cuenta</button>
+            <button onClick={handleLogout} className="delete-btn">Cerrar Sesión</button>
             {message && <p className="message">{message}</p>}
           </div>
         )}

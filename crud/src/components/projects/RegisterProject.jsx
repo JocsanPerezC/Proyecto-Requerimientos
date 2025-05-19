@@ -5,7 +5,7 @@ import '../../styles/style.css';
 
 function Register() {
   const { id } = useParams(); // ID del proyecto
-    console.log(id);
+  console.log("register", id);
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +20,7 @@ function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/register-project', {
+      const response = await fetch(`http://localhost:3001/api/register-project/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, emergencycontact, username, name, lastname, birthday, rol }),
@@ -28,7 +28,8 @@ function Register() {
 
       const data = await response.json();
       if (response.ok) {
-        setMsg('Usuario registrado correctamente. Ahora puedes iniciar sesión.');
+        alert('Usuario registrado correctamente');
+        navigate(`/project/${id}`);
       } else {
         setMsg(data.message || 'Error al registrarse');
       }
@@ -38,7 +39,7 @@ function Register() {
   };
 
   return (
-    <div classname= 'titulo'>
+    <div className= 'titulo'>
       <h2>Registro</h2>
       <form onSubmit={handleRegister}>
         <input

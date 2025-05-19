@@ -33,7 +33,7 @@ function App() {
           <Route path="/create-project" element={<CreateProject />} />
           <Route path="/project/:id" element={<ProjectDetails />} />
           <Route path="/project/:id/add-user" element={<AddUserToProject />} />
-          <Route path="/register-project" element={<RegisterProject />} />
+          <Route path="/register-project/:id" element={<RegisterProject />} />
           <Route path="/topbar" element={<Topbar />} />
           <Route path="/profile" element={<UserProfileView />} />
           <Route path="/profile/edit" element={<UserProfileEdit />} />
