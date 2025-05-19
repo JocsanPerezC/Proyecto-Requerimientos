@@ -16,6 +16,8 @@ function ProjectDetails() {
   const navigate = useNavigate();
 
   useEffect(() => {
+
+    // Función para obtener el proyecto
     const fetchProject = async () => {
       try {
         const response = await fetch(`http://localhost:3001/api/project/${id}`, {
@@ -33,6 +35,7 @@ function ProjectDetails() {
       }
     };
 
+    // Función para obtener requerimientos
     const fetchRequirements = async () => {
       try {
         const response = await fetch(`http://localhost:3001/api/project/${id}/requirements`, {
@@ -51,6 +54,7 @@ function ProjectDetails() {
       }
     };
 
+    // Función para obtener actividades
     const fetchActivities = async () => {
       try {
         const response = await fetch(`http://localhost:3001/api/project/${id}/activities`, {
@@ -80,6 +84,7 @@ function ProjectDetails() {
     }
   }, [activities]);
 
+  // Función para obtener tareas por actividad
   const fetchTasksForActivity = async (activityId) => {
     try {
       const res = await fetch(`http://localhost:3001/api/activity/${activityId}/tasks`, {
@@ -99,6 +104,7 @@ function ProjectDetails() {
     }
   };
 
+  // Maneja la eliminación de requerimientos
   const handleDeleteRequirement = async (requirementId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este requerimiento?')) return;
 
@@ -121,6 +127,7 @@ function ProjectDetails() {
     }
   };
 
+  // Maneja la eliminación de actividades
   const handleDeleteActivity = async (activityId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return;
 
@@ -142,6 +149,35 @@ function ProjectDetails() {
       alert(err.message);
     }
   };
+
+  // Maneja la eliminación de tareas
+  const handleDeleteTask = async (taskId, activityId) => {
+  if (!window.confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return;
+
+  try {
+    const response = await fetch(`http://localhost:3001/api/task/${taskId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('username')}`
+      }
+    });
+
+    if (!response.ok) throw new Error('Error al eliminar la tarea');
+
+    // Actualiza las tareas sin la tarea eliminada
+    setTasksByActivity(prev => ({
+      ...prev,
+      [activityId]: prev[activityId].filter(task => task.id !== taskId)
+    }));
+
+    alert('Tarea eliminada con éxito');
+  } catch (err) {
+    console.error('Error al eliminar tarea:', err);
+    alert(err.message);
+  }
+};
+
 
   if (error) return <div>Error: {error}</div>;
   if (!project) return <div>Cargando...</div>;
@@ -244,6 +280,23 @@ function ProjectDetails() {
                               <strong>{task.title}</strong> - {task.description || 'Sin descripción'}<br />
                               Estado: {task.status} | Fecha: {task.date ? new Date(task.date).toLocaleDateString() : 'Sin fecha'}<br />
                               Asignado a: {task.assignedUsername || 'Sin asignar'}
+
+                              {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
+                                <div className="task-buttons">
+                                  <button
+                                    className="button button-small"
+                                    onClick={() => handleDeleteTask(task.id, act.id)}
+                                  >
+                                    Eliminar Tarea
+                                  </button>
+                                  <button
+                                    className="button button-small"
+                                    onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/edit`)}
+                                  >
+                                    Editar Tarea
+                                  </button>
+                                </div>
+                              )}
                             </li>
                           ))}
                         </ul>

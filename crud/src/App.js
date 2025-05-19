@@ -70,7 +70,7 @@ function App() {
 
             {/* Tareas */}
             <Route path="/project/:id/activity/:activityId/add-task" element={<CreateTask />} />
-            <Route path="/project/:id/task/:taskId/edit" element={<EditTask />} />
+            <Route path="/project/:id/activity/:activityId/task/:taskId/edit" element={<EditTask />} />
 
             {/* Usuarios en proyecto */}
             <Route path="/project/:id/add-user" element={<AddUserToProject />} />

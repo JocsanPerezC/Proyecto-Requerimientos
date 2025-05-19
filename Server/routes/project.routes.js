@@ -950,32 +950,115 @@ router.post("/create-task", authenticateUser, async (req, res) => {
   }
 });
 
-// Actualizar una tarea
-router.put("/task/:id", authenticateUser, async (req, res) => {
+// Obtener una tarea por ID
+router.get("/task/:id", authenticateUser, async (req, res) => {
   const taskId = parseInt(req.params.id);
-  const { name, description } = req.body;
   const userId = req.user.id;
 
   try {
     const pool = await poolPromise;
 
+    const result = await pool.request()
+      .input('taskId', sql.Int, taskId)
+      .query(`
+        SELECT T.*, A.projectid 
+        FROM Tasks T
+        INNER JOIN Activities A ON T.activityid = A.id
+        WHERE T.id = @taskId
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
+    }
+
+    const task = result.recordset[0];
+    const projectId = task.projectid;
+
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol 
+        FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    const role = roleResult.recordset.length > 0 ? roleResult.recordset[0].rol : null;
+
+    res.json({ success: true, task, role });
+
+  } catch (err) {
+    console.error("Error al obtener tarea:", err);
+    res.status(500).json({ success: false, message: 'Error al obtener tarea' });
+  }
+});
+
+
+// Editar una tarea
+router.put("/task/:id", authenticateUser, async (req, res) => {
+  const taskId = parseInt(req.params.id);
+  const { title, description, date, status, assigned } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const pool = await poolPromise;
+
+    // Obtener la actividad y el proyecto asociados a la tarea
+    const result = await pool.request()
+      .input('taskId', sql.Int, taskId)
+      .query(`
+        SELECT A.projectid
+        FROM Tasks T
+        INNER JOIN Activities A ON T.activityid = A.id
+        WHERE T.id = @taskId
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
+    }
+
+    const projectId = result.recordset[0].projectid;
+
+    // Verificar rol del usuario
+    const roleResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT rol FROM RolesProyecto 
+        WHERE userid = @userId AND projectid = @projectId
+      `);
+
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+      return res.status(403).json({ success: false, message: 'No autorizado para editar esta tarea' });
+    }
+
+    // Actualizar la tarea
     await pool.request()
       .input('taskId', sql.Int, taskId)
-      .input('name', sql.VarChar, name)
-      .input('description', sql.VarChar, description)
+      .input('title', sql.VarChar, title)
+      .input('description', sql.VarChar, description || '')
+      .input('date', sql.Date, date || null)
+      .input('status', sql.VarChar, status)
+      .input('assigned', sql.Int, assigned ? parseInt(assigned) : null)
       .query(`
         UPDATE Tasks
-        SET name = @name, description = @description
+        SET 
+          title = @title,
+          description = @description,
+          date = @date,
+          status = @status,
+          assigned = @assigned
         WHERE id = @taskId
       `);
 
-    res.json({ success: true, message: 'Tarea actualizada' });
+    res.json({ success: true, message: 'Tarea actualizada correctamente' });
 
   } catch (err) {
     console.error("Error al actualizar tarea:", err);
     res.status(500).json({ success: false, message: 'Error al actualizar tarea' });
   }
 });
+
 
 // Eliminar una tarea
 router.delete('/task/:id', authenticateUser, async (req, res) => {
