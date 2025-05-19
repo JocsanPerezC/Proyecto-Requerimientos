@@ -10,13 +10,12 @@ function ProjectDetails() {
   const [project, setProject] = useState(null);
   const [activities, setActivities] = useState([]);
   const [requirements, setRequirements] = useState([]);
+  const [tasksByActivity, setTasksByActivity] = useState({});
   const [error, setError] = useState('');
   const [rolUsuario, setRolUsuario] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-
-    // Cargar detalles del proyecto
     const fetchProject = async () => {
       try {
         const response = await fetch(`http://localhost:3001/api/project/${id}`, {
@@ -34,7 +33,6 @@ function ProjectDetails() {
       }
     };
 
-    // Cargar requerimientos del proyecto
     const fetchRequirements = async () => {
       try {
         const response = await fetch(`http://localhost:3001/api/project/${id}/requirements`, {
@@ -44,10 +42,7 @@ function ProjectDetails() {
           }
         });
 
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: No se encontraron requerimientos`);
-        }
-
+        if (!response.ok) throw new Error(`Error ${response.status}: No se encontraron requerimientos`);
         const data = await response.json();
         setRequirements(data.requirements || []);
       } catch (err) {
@@ -56,7 +51,6 @@ function ProjectDetails() {
       }
     };
 
-    // Cargar actividades del proyecto
     const fetchActivities = async () => {
       try {
         const response = await fetch(`http://localhost:3001/api/project/${id}/activities`, {
@@ -73,12 +67,38 @@ function ProjectDetails() {
       }
     };
 
-    fetchRequirements();
     fetchProject();
+    fetchRequirements();
     fetchActivities();
   }, [id]);
 
-  // Función para eliminar requerimiento
+  useEffect(() => {
+    if (activities.length > 0) {
+      activities.forEach(activity => {
+        fetchTasksForActivity(activity.id);
+      });
+    }
+  }, [activities]);
+
+  const fetchTasksForActivity = async (activityId) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/activity/${activityId}/tasks`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('username')}`
+        }
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setTasksByActivity(prev => ({ ...prev, [activityId]: data.tasks }));
+      } else {
+        console.error("Error al obtener tareas:", data.message);
+      }
+    } catch (err) {
+      console.error("Error al cargar tareas:", err);
+    }
+  };
+
   const handleDeleteRequirement = async (requirementId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este requerimiento?')) return;
 
@@ -91,9 +111,7 @@ function ProjectDetails() {
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Error al eliminar el requerimiento');
-      }
+      if (!response.ok) throw new Error('Error al eliminar el requerimiento');
 
       setRequirements(prev => prev.filter(req => req.id !== requirementId));
       alert('Requerimiento eliminado con éxito');
@@ -102,8 +120,7 @@ function ProjectDetails() {
       alert(err.message);
     }
   };
-  
-  // Función para eliminar actividad
+
   const handleDeleteActivity = async (activityId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return;
 
@@ -116,9 +133,7 @@ function ProjectDetails() {
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Error al eliminar la actividad');
-      }
+      if (!response.ok) throw new Error('Error al eliminar la actividad');
 
       setActivities(prev => prev.filter(act => act.id !== activityId));
       alert('Actividad eliminada con éxito');
@@ -138,21 +153,18 @@ function ProjectDetails() {
         <h2>{project.name}</h2>
         <p>{project.description}</p>
         <p><strong>Fecha de inicio:</strong> {new Date(project.date).toLocaleDateString()}</p>
-        
+
         <div>
           {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
-              <button className="buttonproject" onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
+            <button className="buttonproject" onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
           )}
           <button className="buttonproject" onClick={() => navigate(`/project/${id}/users`)}>Ver Usuarios</button>
           <button className="buttonproject" onClick={() => navigate('/dashboard')}>Volver</button>
         </div>
-        
-        {/* Sección desplegable de requerimientos */}
+
+        {/* Requerimientos */}
         <div className="collapsible-section">
-          <div 
-            className="section-header" 
-            onClick={() => setRequirementsOpen(!requirementsOpen)}
-          >
+          <div className="section-header" onClick={() => setRequirementsOpen(!requirementsOpen)}>
             <h3>
               Requerimientos del Proyecto
               <span className="item-count">{requirements.length}</span>
@@ -175,7 +187,7 @@ function ProjectDetails() {
                     <p>{req.description || 'Sin detalles'}</p>
                     <p>Tipo: {req.type}</p>
                     <p><strong>{req.status}</strong></p>
-                    {rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto' ? (
+                    {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
                       <div className="requirement-buttons">
                         <button
                           className="button button-small"
@@ -190,27 +202,24 @@ function ProjectDetails() {
                           Editar Requerimiento
                         </button>
                       </div>
-                    ) : null}
+                    )}
                   </li>
                 ))}
               </ul>
             )}
           </div>
         </div>
-        
-        {/* Sección desplegable de actividades */}
+
+        {/* Actividades y Tareas */}
         <div className="collapsible-section">
-          <div 
-            className="section-header" 
-            onClick={() => setActivitiesOpen(!activitiesOpen)}
-          >
+          <div className="section-header" onClick={() => setActivitiesOpen(!activitiesOpen)}>
             <h3>
               Actividades del Proyecto
               <span className="item-count">{activities.length}</span>
             </h3>
             {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
               <span className="button-counta">
-                <button onClick={() => navigate(`/project/${id}/add-requirement`)}>Agregar Actividad</button>
+                <button onClick={() => navigate(`/project/${id}/add-activity`)}>Agregar Actividad</button>
               </span>
             )}
             <span className={`toggle-icon ${activitiesOpen ? 'open' : ''}`}>▼</span>
@@ -224,28 +233,38 @@ function ProjectDetails() {
                   <li key={act.id} className="activity-item">
                     <h4>{act.name}</h4>
                     <p>{act.description || 'Sin descripción'}</p>
-                    {rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto' ? (
+
+                    {/* Tareas dentro de la actividad */}
+                    <div className="task-section">
+                      <strong>Tareas:</strong>
+                      {tasksByActivity[act.id] && tasksByActivity[act.id].length > 0 ? (
+                        <ul className="task-list">
+                          {tasksByActivity[act.id].map(task => (
+                            <li key={task.id} className="task-item">
+                              <strong>{task.title}</strong> - {task.description || 'Sin descripción'}<br />
+                              Estado: {task.status} | Fecha: {task.date ? new Date(task.date).toLocaleDateString() : 'Sin fecha'}<br />
+                              Asignado a: {task.assignedUsername || 'Sin asignar'}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>No hay tareas para esta actividad.</p>
+                      )}
+                    </div>
+
+                    {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
                       <div className="activity-buttons">
-                        <button
-                          className="button button-small"
-                          onClick={() => handleDeleteActivity(act.id)}
-                        >
+                        <button className="button button-small" onClick={() => handleDeleteActivity(act.id)}>
                           Eliminar Actividad
                         </button>
-                        <button
-                          className="button button-small"
-                          onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}
-                        >
+                        <button className="button button-small" onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}>
                           Editar Actividad
                         </button>
-                        <button
-                          className="button button-small"
-                          onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}
-                        >
+                        <button className="button button-small" onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}>
                           Agregar Tarea
                         </button>
                       </div>
-                    ) : null}
+                    )}
                   </li>
                 ))}
               </ul>

@@ -896,39 +896,22 @@ router.delete('/requirement/:id', authenticateUser, async (req, res) => {
 
 // Obtener tareas de una actividad
 router.get('/activity/:id/tasks', authenticateUser, async (req, res) => {
-  const activityId = req.params.id;
-  const userId = req.user.id;
+  const activityId = parseInt(req.params.id);
 
   try {
     const pool = await poolPromise;
-
-    // Verificar que el usuario tiene rol en el proyecto
-    const userHasAccess = await pool.request()
-      .input('activityId', sql.Int, activityId)
-      .input('userId', sql.Int, userId)
+    const result = await pool.request()
+      .input('activityid', sql.Int, activityId)
       .query(`
-        SELECT 1 
-        FROM Activities a
-        JOIN Projects p ON a.projectid = p.id
-        JOIN RolesProyecto rp ON p.id = rp.projectid
-        WHERE a.id = @activityId AND rp.userid = @userId
+        SELECT t.id, t.title, t.description, t.date, t.status, t.assigned, u.username AS assignedUsername
+        FROM Tasks t
+        LEFT JOIN Users u ON t.assigned = u.id
+        WHERE t.activityid = @activityid
       `);
 
-    if (userHasAccess.recordset.length === 0) {
-      return res.status(403).json({ success: false, message: 'No tienes acceso a esta actividad' });
-    }
-
-    // Obtener tareas de la actividad
-    const tasksResult = await pool.request()
-      .input('activityId', sql.Int, activityId)
-      .query(`
-        SELECT id, name, description, activityid
-        FROM Tasks
-        WHERE activityid = @activityId
-      `);
-    res.json({ success: true, tasks: tasksResult.recordset });
-  } catch (error) { 
-    console.error('Error al obtener tareas:', error);
+    res.json({ success: true, tasks: result.recordset });
+  } catch (err) {
+    console.error("Error al obtener tareas:", err);
     res.status(500).json({ success: false, message: 'Error al obtener tareas' });
   }
 });
