@@ -78,7 +78,7 @@ function CreateRequirement() {
       
       <form onSubmit={handleSubmit} className="project-form">
         <div className="form-group">
-          <label htmlFor="code">Código *</label>
+          <label htmlFor="code">Código</label>
           <input
             type="text"
             id="code"
@@ -90,7 +90,7 @@ function CreateRequirement() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="description">Descripción *</label>
+          <label htmlFor="description">Descripción</label>
           <textarea
             id="description"
             name="description"
@@ -145,7 +145,7 @@ function CreateRequirement() {
         </div>
 
         <div className="form-actions">
-          <button type="submit" disabled={loading}>
+          <button className="buttoncenter" type="submit" disabled={loading}>
             {loading ? 'Creando...' : 'Crear Requerimiento'}
           </button>
           <button type="button" onClick={() => navigate(`/project/${id}`)} className="cancel-btn">

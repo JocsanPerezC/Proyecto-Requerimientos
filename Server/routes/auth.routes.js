@@ -206,7 +206,7 @@ router.post("/login", async (req, res) => {
 
 // Recuperar cuenta
 router.post("/recover", async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password} = req.body;
 
   try {
     const pool = await poolPromise;
@@ -223,9 +223,10 @@ router.post("/recover", async (req, res) => {
     if (user.password !== password) {
       return res.status(400).json({ success: false, message: "Contraseña incorrecta" });
     }
-
-    if (user.active === 1) {
-      return res.json({ success: true, message: "La cuenta ya estaba activa" });
+    console.log("Usuario cargado:", user);
+    console.log(user.Active);
+    if (user.Active) {
+      return res.status(400).json({ success: false, message: "La cuenta ya se encuentra activa" });
     }
 
     await pool.request()

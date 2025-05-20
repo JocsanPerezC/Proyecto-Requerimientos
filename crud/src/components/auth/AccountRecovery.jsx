@@ -34,7 +34,7 @@ function AccountRecovery() {
   };
 
   return (
-    <div className="container">
+    <div className="container-recover">
       <h2>Recuperar Cuenta</h2>
       <form onSubmit={handleSubmit}>
         <input

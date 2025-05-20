@@ -36,7 +36,7 @@ function UserProjectProfile() {
       {(rolActual === 'Administrador de Proyecto' || rolActual === 'Lider de Proyecto') &&
           user.id !== currentUserId &&
           !completed && (
-        <button onClick={() => navigate(`/project/${id}/users/${user.id}/edit`)}>
+        <button className="buttoncenter"onClick={() => navigate(`/project/${id}/users/${user.id}/edit`)}>
             Editar Rol
         </button>
       )}

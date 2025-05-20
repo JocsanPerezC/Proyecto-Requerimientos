@@ -25,14 +25,14 @@ function UserProfileView() {
   if (!user) return <div>Cargando perfil...</div>;
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2>Mi Perfil</h2>
       <p><strong>Nombre:</strong> {user.name}</p>
       <p><strong>Apellido:</strong> {user.lastname}</p>
       <p><strong>Email:</strong> {user.email}</p>
       <p><strong>Contacto de emergencia:</strong> {user.emergencycontact}</p>
       <p><strong>Username:</strong> {localStorage.getItem('username')}</p>
-      <button onClick={() => navigate('/profile/edit')}>Editar Perfil</button>
+      <button className="buttoncenter"onClick={() => navigate('/profile/edit')}>Editar Perfil</button>
       <button onClick={() => navigate('/dashboard')}>Volver</button>
     </div>
   );

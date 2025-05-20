@@ -105,8 +105,12 @@ function Dashboard() {
     <>
     <Topbar />
         <div className="container">
-        <h2 className="titulo">Mis Proyectos</h2>
-        
+          <div className="header">
+            <h2 className="titulo">Mis Proyectos</h2>
+            <button onClick={handleCreateProject} className="buttoncreate">
+              Crear Nuevo Proyecto
+            </button>
+          </div>
         {error && <p className="error-message">{error}</p>}
         
         <div className="projects-container">
@@ -155,12 +159,6 @@ function Dashboard() {
                 ))}
             </ul>
             )}
-        </div>
-        
-        <div >
-            <button onClick={handleCreateProject} className="buttoncreate">
-            Crear Nuevo Proyecto
-            </button>
         </div>
         </div>
     </>

@@ -25,6 +25,16 @@ body {
   border-radius: 10px;
 }
 
+.container-recover {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  text-align: center;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+
 .container-adduserproject {
   max-width: 400px;
   margin: 50px auto;
@@ -156,6 +166,7 @@ input[type="date"],
 input[type="username"],
 input[type="password"],
 input[name="name"],
+input[name="username"],
 textarea,
 select {
   width: 100%;
@@ -334,11 +345,56 @@ ul {
   padding: 0;
 }
 
-.buttoncreate {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+
+/* Estilos para el encabezado con título y botón alineados */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 0 10px;
 }
+
+.titulo {
+  margin: 0;
+  font-size: 28px;
+  color: #2c3e50;
+}
+
+.buttoncreate {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.buttoncreate:hover {
+  background-color: #2980b9;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 0 10px;
+}
+
+.user-button{
+  max-width: 20px;
+}
+
+.titulo {
+  margin: 0;
+  font-size: 28px;
+  color: #2c3e50;
+}
+
 
 .project-item, .user-box {
   background-color: #f2f2f2;
@@ -376,21 +432,7 @@ ul {
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  width: 260px;
-  z-index: 1000;
-}
-
-.user-menu {
-  position: absolute;
-  right: 25px;
-  top: 60px;
-  background: white;
-  color: black;
-  border: 1px solid #ccc;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  width: 260px;
+  width: 180px;
   z-index: 1000;
 
   display: flex;
@@ -462,5 +504,15 @@ p.message {
   width: 100%;
   padding: 10px;
 }
+
+.header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .buttoncreate {
+    width: 100%;
+  }
 
 }

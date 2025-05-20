@@ -255,7 +255,7 @@ function ProjectDetails() {
             </h3>
             {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
               <span className="button-counta">
-                <button onClick={() => navigate(`/project/${id}/add-activity`)}>Agregar Actividad</button>
+                <button onClick={() => navigate(`/project/${id}/add-activities`)}>Agregar Actividad</button>
               </span>
             )}
             <span className={`toggle-icon ${activitiesOpen ? 'open' : ''}`}>▼</span>

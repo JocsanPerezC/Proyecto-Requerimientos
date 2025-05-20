@@ -801,9 +801,10 @@ router.get("/requirement/:id", authenticateUser, async (req, res) => {
         SELECT rol FROM RolesProyecto 
         WHERE userid = @userId AND projectid = @projectId
       `);
-
+        console.log("Rol del usuario:", roleResult.recordset[0].rol);
     if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
-      return res.status(403).json({ success: false, message: 'No autorizado para ver este requerimiento' });
+        console.log("No autorizado");
+      res.status(403).json({ success: false, message: 'No autorizado para ver este requerimiento' });
     }
 
     res.json({ success: true, requirement });
@@ -845,7 +846,7 @@ router.put("/requirement/:id", authenticateUser, async (req, res) => {
         WHERE userid = @userId AND projectid = @projectId
       `);
 
-    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== ('Administrador de Proyecto' || 'Lider de Proyecto')) {
       return res.status(403).json({ success: false, message: 'No autorizado para editar este requerimiento' });
     }
 

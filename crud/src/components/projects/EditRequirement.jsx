@@ -16,13 +16,14 @@ function EditRequirement() {
     const fetchRequirement = async () => {
       try {
         const res = await fetch(`http://localhost:3001/api/requirement/${requirementId}`, {
+          method: 'GET',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('username')}`
           }
         });
         const data = await res.json();
+        console.log('data', data);
         if (res.ok) {
-          console.log('data', data);
           setRequirement({
           code: data.requirement.code,
           description: data.requirement.description || '',

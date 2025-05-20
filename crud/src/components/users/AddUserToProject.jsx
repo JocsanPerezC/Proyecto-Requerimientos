@@ -65,7 +65,7 @@ function AddUserToProject() {
           </select>
         </div>
         <div className="buttongroup">
-          <button className="button" type="submit">Agregar</button>
+          <button className="buttoncenter" type="submit">Agregar</button>
           <button className="button" type="button" onClick={() => navigate(`/project/${id}`)}>Volver</button>
         </div>
       </form>

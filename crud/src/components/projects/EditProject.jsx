@@ -62,7 +62,7 @@ function EditProject() {
         <textarea name="description" value={project.description} onChange={handleChange} placeholder="Descripción" />
         <input type="date" name="date" value={project.date} onChange={handleChange} required />
         <button type="submit">Guardar Cambios</button>
-        <button type="button" onClick={() => navigate('/dashboard')}>Cancelar</button>
+        <button className = "buttonproject" type="button" onClick={() => navigate('/dashboard')}>Cancelar</button>
       </form>
       {message && <p>{message}</p>}
     </div>

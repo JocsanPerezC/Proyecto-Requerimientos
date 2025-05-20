@@ -74,7 +74,7 @@ function CreateActivity() {
       
       <form onSubmit={handleSubmit} className="project-form">
         <div className="form-group">
-          <label htmlFor="name">Nombre de la Actividad *</label>
+          <label htmlFor="name">Nombre de la Actividad</label>
           <input
             type="text"
             id="name"
@@ -97,7 +97,7 @@ function CreateActivity() {
         </div>
         
         <div className="form-actions">
-          <button type="submit" disabled={loading}>
+          <button className="buttoncenter" type="submit" disabled={loading}>
             {loading ? 'Creando...' : 'Crear Actividad'}
           </button>
           <button type="button" onClick={() => navigate(`/project/${id}`)} className="cancel-btn">
