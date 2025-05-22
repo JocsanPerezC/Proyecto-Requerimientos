@@ -76,6 +76,7 @@ function Topbar() {
       setMessage('Error: ' + err.message);
     }
   };
+
 // Bienvenido, <strong>{username}</strong>
   return (
     <div className="topbar">
