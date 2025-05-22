@@ -506,20 +506,30 @@ ul {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
+
 
 .topbar .menu-btn {
   background: none;
   color: white;
-  font-size: 20px;
+  font-size: 24px;
   border: none;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
+
+.topbar .menu-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 
 .user-menu {
   position: absolute;
-  right: 25px;
-  top: 60px;
+  right: 10px;
+  top: 50px;
   background: white;
   color: black;
   border: 1px solid #ccc;
@@ -610,3 +620,7 @@ p.message {
   }
 
 }
+
+
+
+
