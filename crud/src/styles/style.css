@@ -96,9 +96,14 @@ h1, h2, h3,  h4 {
 
 /* Secciones de requerimientos y actividades */
 .requirements-section,
-.activities-section {
+.activities-section{
   margin-top: 40px;
   padding: 20px 0;
+}
+
+.task-section {
+  
+  margin-top: 15px;
 }
 
 /* Estilos para las listas */
@@ -155,12 +160,10 @@ h1, h2, h3,  h4 {
 
 .button-small {
   padding: 6px 12px;
-  font-size: 13px;
 }
 
 .button-small-delete {
   padding: 6px 12px;
-  font-size: 13px;
   background-color: #e74c3c;
   text-align: center;
 }
@@ -234,7 +237,7 @@ select {
 .activity-buttons-vertical {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0.5rem;
   min-width: 140px;
 }
 
@@ -287,7 +290,7 @@ select {
   justify-content: space-between;
   align-items: center;
   background-color: #eee;
-  padding: 8px 12px;
+  padding: 0px 12px;
   border-radius: 4px;
   cursor: pointer;
   margin-bottom: 10px;

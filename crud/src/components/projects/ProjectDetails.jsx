@@ -293,7 +293,7 @@ const toggleActivityTasks = (activityId) => {
                       {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
                         <div className="activity-buttons-vertical">
                           <button className="delete-btn" onClick={() => handleDeleteActivity(act.id)}>Eliminar Actividad</button>
-                          <button className="button-small" onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}>Editar Actividad</button>
+                          <button onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}>Editar Actividad</button>
                           <button onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}>Agregar Tarea</button>
                         </div>
                       )}
