@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import '../../styles/style.css';
+import '../../../styles/style.css';
 
 function CreateRequirement() {
   const { id } = useParams(); // ID del proyecto desde la URL

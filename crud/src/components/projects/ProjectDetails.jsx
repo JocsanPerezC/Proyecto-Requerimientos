@@ -285,15 +285,15 @@ const toggleActivityTasks = (activityId) => {
                 {activities.map((act) => (
                   <li key={act.id} className="activity-item">
                     <div className="activity-header">
-                      <div>
+                      <div className="activity-info">
                         <h4>{act.name}</h4>
-                        <p>{act.description || 'Sin descripción'}</p>
+                        <p className="activity-description">{act.description || 'Sin descripción'}</p>
                       </div>
 
                       {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
                         <div className="activity-buttons-vertical">
                           <button className="delete-btn" onClick={() => handleDeleteActivity(act.id)}>Eliminar Actividad</button>
-                          <button button-small onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}>Editar Actividad</button>
+                          <button className="button-small" onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}>Editar Actividad</button>
                           <button onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}>Agregar Tarea</button>
                         </div>
                       )}
@@ -309,11 +309,22 @@ const toggleActivityTasks = (activityId) => {
                       tasksByActivity[act.id] && tasksByActivity[act.id].length > 0 ? (
                         <ul className="task-list">
                           {tasksByActivity[act.id].map(task => (
-                            <li key={task.id} className="task-item">
+                            <li key={task.id} className="task-item-flex">
                               <div className="task-info">
-                                <p><strong>{task.title}</strong> - {task.description || 'Sin descripción'}</p>
-                                <p>Estado: {task.status} | Fecha: {task.date ? new Date(task.date).toLocaleDateString() : 'Sin fecha'}</p>
-                                <p>Asignado a: {task.assignedUsername || 'Sin asignar'}</p>
+                                <p><strong>{task.title}</strong></p>
+                                <p>{task.description || 'Sin descripción'}</p>
+                                <p style={{
+                                  color:
+                                    task.status === 'Pendiente' ? 'red' :
+                                    task.status=== 'En progreso' ? 'orange' :
+                                    task.status === 'Completada' ? 'green' :
+                                    'black',
+                                  fontWeight: 'bold'
+                                }}>
+                                  {task.status}
+                                </p>
+                                <p>Fecha: {task.date ? new Date(task.date).toLocaleDateString() : 'Sin fecha'}</p>
+                                <p>Asignado a: <strong> {task.assignedUsername || 'Sin asignar'} </strong></p>
                               </div>
 
                               {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
@@ -324,6 +335,7 @@ const toggleActivityTasks = (activityId) => {
                               )}
                             </li>
                           ))}
+
                         </ul>
                       ) : (
                         <p>No hay tareas para esta actividad.</p>

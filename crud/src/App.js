@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Autenticación
@@ -11,6 +10,12 @@ import { UserProvider } from './Components/auth/UserContext';
 import Topbar from './Components/layout/Topbar';
 import Dashboard from './Components/layout/Dashboard';
 
+// Usuarios
+import AddUserToProject from './Components/users/AddUserToProject';
+import UserProfileView from './Components/users/UserProfileView';
+import UserProfileEdit from './Components/users/UserProfileEdit';
+import EditUserRole from './Components/users/EditUserRole';
+
 // Proyectos
 import CreateProject from './Components/Projects/CreateProject';
 import RegisterProject from './Components/Projects/RegisterProject';
@@ -19,18 +24,18 @@ import EditProject from './Components/Projects/EditProject';
 import ProjectUsers from './Components/Projects/ProjectUsers';
 import UserProjectProfile from './Components/Projects/UserProjectProfile';
 import WithProjectRole from './Components/Projects/WithProjectRole';
-import CreateRequirement from './Components/Projects/CreateRequirement';
-import CreateActivities from './Components/Projects/CreateActivities';
-import CreateTask from './Components/Projects/CreateTask';
-import EditRequirement from './Components/Projects/EditRequirement';
-import EditActivities from './Components/Projects/EditActivities';
-import EditTask from './Components/Projects/EditTask';
 
-// Usuarios
-import AddUserToProject from './Components/users/AddUserToProject';
-import UserProfileView from './Components/users/UserProfileView';
-import UserProfileEdit from './Components/users/UserProfileEdit';
-import EditUserRole from './Components/users/EditUserRole';
+// Requisitos
+import CreateRequirement from './Components/Projects/Requirements/CreateRequirement';
+import EditRequirement from './Components/Projects/Requirements/EditRequirement';
+
+// Actividades
+import CreateActivities from './Components/Projects/Activities/CreateActivities';
+import EditActivities from './Components/Projects/Activities/EditActivities';
+
+// Tareas
+import CreateTask from './Components/Projects/Tasks/CreateTask';
+import EditTask from './Components/Projects/Tasks/EditTask';
 
 // Estilos
 import './styles/style.css';
