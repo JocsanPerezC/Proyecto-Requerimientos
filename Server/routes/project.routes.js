@@ -166,7 +166,7 @@ router.get("/project/:id/users", authenticateUser, async (req, res) => {
     const result = await pool.request()
       .input('projectId', sql.Int, projectId)
       .query(`
-        SELECT u.id, u.username, u.name, u.lastname, u.email, u.emergencycontact, pm.rol, pm.projectid
+        SELECT u.id, u.username, u.name, u.lastname, u.email, u.emergencycontact, pm.rol, pm.projectid, u.type
         FROM Users u
         JOIN RolesProyecto pm ON pm.userid = u.id
         WHERE pm.projectid = @projectId
@@ -281,7 +281,7 @@ router.get("/projects", authenticateUser, async (req, res) => {
       .query(`
         SELECT 
           p.id, p.name, p.description, p.date, p.completed,
-          pm.rol
+          pm.rol, p.type
         FROM Projects p
         INNER JOIN RolesProyecto pm ON p.id = pm.projectid
         WHERE pm.userid = @userId
@@ -299,7 +299,7 @@ router.get("/projects", authenticateUser, async (req, res) => {
 // Crear un nuevo proyecto
 router.post("/create-project", authenticateUser, async (req, res) => {
   try {
-    const { name, description, date} = req.body;
+    const { name, description, date, type} = req.body;
     const userId = req.user.id;
     
     console.log("Datos recibidos:", { name, description, date});
@@ -326,10 +326,11 @@ router.post("/create-project", authenticateUser, async (req, res) => {
         .input('description', sql.VarChar, description || '')
         .input('date', sql.Date, date)
         .input('creator', sql.Int, userId)
+        .input('type', sql.VarChar, type) 
         .query(`
-          INSERT INTO Projects (name, description, date, creator)
+          INSERT INTO Projects (name, description, date, creator, type)
           OUTPUT INSERTED.id
-          VALUES (@name, @description, @date, @creator)
+          VALUES (@name, @description, @date, @creator, @type)
         `);
       
       const projectId = projectResult.recordset[0].id;
@@ -846,7 +847,7 @@ router.put("/requirement/:id", authenticateUser, async (req, res) => {
         WHERE userid = @userId AND projectid = @projectId
       `);
 
-    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== ('Administrador de Proyecto' || 'Lider de Proyecto')) {
+    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
       return res.status(403).json({ success: false, message: 'No autorizado para editar este requerimiento' });
     }
 

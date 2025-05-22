@@ -122,6 +122,7 @@ function Dashboard() {
                 <li key={project.id} className="project-item">
                     <h3>{project.name}</h3>
                     <p>{project.description}</p>
+                    <p><strong>Tipo de proyecto:</strong> {project.type}</p>
                     <p><strong>Tu rol:</strong> {project.rol}</p>
                     <p><strong>Fecha de inicio:</strong> {new Date(project.date).toLocaleString('es-ES', { timeZone: 'UTC', dateStyle: 'short' })}</p>
                     <p><strong>Fecha de entrega:</strong> {project.completed ? new Date(project.completed).toLocaleDateString() : 'No entregado'}</p>

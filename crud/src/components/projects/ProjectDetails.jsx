@@ -223,7 +223,7 @@ function ProjectDetails() {
                     <p>{req.description || 'Sin detalles'}</p>
                     <p>Tipo: {req.type}</p>
                     <p><strong>{req.status}</strong></p>
-                    {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
+                    {(rolUsuario === 'Administrador de Proyecto') && (
                       <div className="requirement-buttons">
                         <button
                           className="button button-small"
