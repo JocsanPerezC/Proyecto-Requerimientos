@@ -73,20 +73,21 @@ function EditRequirement() {
       <h2>Editar Requerimiento</h2>
       <form onSubmit={handleSubmit} className="project-form">
         <div className="form-group">
-          <input name="code" value={requirement.code} onChange={handleChange}placeholder="Nombre" required />
+          <label>Código</label>
+          <input name="code" value={requirement.code} onChange={handleChange}placeholder="code" required />
         </div>
 
         <div className="form-group">
+          <label>Descripción</label>
           <textarea name="description" value={requirement.description} onChange={handleChange} placeholder="Descripción" rows="4" />
         </div>
 
         <div className="form-group">
           <label>Estado</label>
-          <p>{requirement.status}</p>
           <select name="status" value={requirement.status} onChange={handleChange} required>
-            <option value="pendiente">Pendiente</option>
-            <option value="en progreso">En Progreso</option>
-            <option value="completado">Completado</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En progreso">En Progreso</option>
+            <option value="Completada">Completada</option>
           </select>
         </div>
 
@@ -99,7 +100,7 @@ function EditRequirement() {
         </div>
 
         <div className="form-actions">
-          <button type="submit">Guardar Cambios</button>
+          <button className="buttoncenter" type="submit">Guardar Cambios</button>
           <button type="button" onClick={() => navigate(`/project/${id}`)}>Cancelar</button>
         </div>
       </form>

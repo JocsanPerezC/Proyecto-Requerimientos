@@ -83,14 +83,14 @@ function CreateProject() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2 className="titulo">Crear Nuevo Proyecto</h2>
       
       {error && <p className="error-message">{error}</p>}
       
       <form onSubmit={handleSubmit} className="project-form">
         <div className="form-group">
-          <label htmlFor="name">Nombre del Proyecto *</label>
+          <label htmlFor="name">Nombre del Proyecto</label>
           <input
             type="text"
             id="name"
@@ -101,6 +101,18 @@ function CreateProject() {
           />
         </div>
         
+        <div className="form-group">
+          <label htmlFor="type">Tipo de Proyecto</label>
+          <input
+            type="text"
+            id="type"
+            name="type"
+            value={projectData.type}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
         <div className="form-group">
           <label htmlFor="description">Descripción</label>
           <textarea
@@ -113,7 +125,7 @@ function CreateProject() {
         </div>
         
         <div className="form-group">
-          <label htmlFor="date">Fecha de Inicio *</label>
+          <label htmlFor="date">Fecha de Inicio</label>
           <input
             type="date"
             id="date"
@@ -125,7 +137,7 @@ function CreateProject() {
         </div>
         
         <div className="form-actions">
-          <button type="submit" disabled={loading}>
+          <button className="buttoncenter" type="submit" disabled={loading}>
             {loading ? 'Creando...' : 'Crear Proyecto'}
           </button>
           <button type="button" onClick={() => navigate('/dashboard')} className="cancel-btn">

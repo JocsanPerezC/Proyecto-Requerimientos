@@ -166,7 +166,7 @@ router.get("/project/:id/users", authenticateUser, async (req, res) => {
     const result = await pool.request()
       .input('projectId', sql.Int, projectId)
       .query(`
-        SELECT u.id, u.username, u.name, u.lastname, u.email, u.emergencycontact, pm.rol, pm.projectid, u.type
+        SELECT u.id, u.username, u.name, u.lastname, u.email, u.emergencycontact, pm.rol, pm.projectid
         FROM Users u
         JOIN RolesProyecto pm ON pm.userid = u.id
         WHERE pm.projectid = @projectId
@@ -655,7 +655,8 @@ router.put("/activity/:id", authenticateUser, async (req, res) => {
       .input('projectId', sql.Int, projectId)
       .query(`SELECT rol FROM RolesProyecto WHERE userid = @userId AND projectid = @projectId`);
 
-    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+    const rol = roleResult.recordset[0]?.rol;
+    if (!rol || (rol !== 'Administrador de Proyecto' && rol !== 'Lider de Proyecto')) {
       return res.status(403).json({ success: false, message: 'No autorizado para editar esta actividad' });
     }
 
@@ -676,6 +677,7 @@ router.put("/activity/:id", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al actualizar actividad' });
   }
 });
+
 
 // Eliminar una actividad
 router.delete('/activity/:id', authenticateUser, async (req, res) => {
@@ -803,7 +805,8 @@ router.get("/requirement/:id", authenticateUser, async (req, res) => {
         WHERE userid = @userId AND projectid = @projectId
       `);
         console.log("Rol del usuario:", roleResult.recordset[0].rol);
-    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+    const rol = roleResult.recordset[0]?.rol;
+    if (!rol || (rol !== 'Administrador de Proyecto' && rol !== 'Lider de Proyecto')) {
         console.log("No autorizado");
       res.status(403).json({ success: false, message: 'No autorizado para ver este requerimiento' });
     }
@@ -847,7 +850,8 @@ router.put("/requirement/:id", authenticateUser, async (req, res) => {
         WHERE userid = @userId AND projectid = @projectId
       `);
 
-    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+    const rol = roleResult.recordset[0]?.rol;
+    if (!rol || (rol !== 'Administrador de Proyecto' && rol !== 'Lider de Proyecto')) {
       return res.status(403).json({ success: false, message: 'No autorizado para editar este requerimiento' });
     }
 
@@ -867,7 +871,6 @@ router.put("/requirement/:id", authenticateUser, async (req, res) => {
           type = @type
         WHERE id = @requirementId
       `);
-
 
     res.json({ success: true, message: 'Requerimiento actualizado' });
 
@@ -1030,7 +1033,8 @@ router.put("/task/:id", authenticateUser, async (req, res) => {
         WHERE userid = @userId AND projectid = @projectId
       `);
 
-    if (roleResult.recordset.length === 0 || roleResult.recordset[0].rol !== 'Administrador de Proyecto') {
+    const rol = roleResult.recordset[0]?.rol;
+    if (!rol || (rol !== 'Administrador de Proyecto' && rol !== 'Lider de Proyecto')) {
       return res.status(403).json({ success: false, message: 'No autorizado para editar esta tarea' });
     }
 

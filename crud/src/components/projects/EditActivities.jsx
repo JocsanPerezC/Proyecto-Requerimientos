@@ -60,7 +60,7 @@ function EditActivity() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2>Editar Actividad</h2>
       <form onSubmit={handleSubmit} className="project-form">
         <div className="form-group">
@@ -74,7 +74,7 @@ function EditActivity() {
         </div>
 
         <div className="form-actions">
-          <button type="submit">Guardar Cambios</button>
+          <button className="buttoncenter" type="submit">Guardar Cambios</button>
           <button type="button" onClick={() => navigate(`/project/${id}`)}>Cancelar</button>
         </div>
       </form>

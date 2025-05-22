@@ -14,6 +14,7 @@ function ProjectDetails() {
   const [error, setError] = useState('');
   const [rolUsuario, setRolUsuario] = useState('');
   const navigate = useNavigate();
+  const [openActivities, setOpenActivities] = useState({});
 
   useEffect(() => {
 
@@ -178,6 +179,12 @@ function ProjectDetails() {
   }
 };
 
+const toggleActivityTasks = (activityId) => {
+  setOpenActivities(prev => ({
+    ...prev,
+    [activityId]: !prev[activityId]
+  }));
+};
 
   if (error) return <div>Error: {error}</div>;
   if (!project) return <div>Cargando...</div>;
@@ -222,11 +229,20 @@ function ProjectDetails() {
                     <h4>Código: {req.code}</h4>
                     <p>{req.description || 'Sin detalles'}</p>
                     <p>Tipo: {req.type}</p>
-                    <p><strong>{req.status}</strong></p>
-                    {(rolUsuario === 'Administrador de Proyecto') && (
+                    <p style={{
+                        color:
+                          req.status === 'Pendiente' ? 'red' :
+                          req.status=== 'En progreso' ? 'orange' :
+                          req.status === 'Completada' ? 'green' :
+                          'black',
+                        fontWeight: 'bold'
+                      }}>
+                        {req.status}
+                      </p>
+                    {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
                       <div className="requirement-buttons">
                         <button
-                          className="button button-small"
+                          className="button button-small-delete"
                           onClick={() => handleDeleteRequirement(req.id)}
                         >
                           Eliminar Requerimiento
@@ -260,6 +276,7 @@ function ProjectDetails() {
             )}
             <span className={`toggle-icon ${activitiesOpen ? 'open' : ''}`}>▼</span>
           </div>
+
           <div className={`section-content ${activitiesOpen ? 'open' : ''}`}>
             {activities.length === 0 ? (
               <p>No hay actividades registradas aún.</p>
@@ -267,34 +284,42 @@ function ProjectDetails() {
               <ul className="activity-list">
                 {activities.map((act) => (
                   <li key={act.id} className="activity-item">
-                    <h4>{act.name}</h4>
-                    <p>{act.description || 'Sin descripción'}</p>
+                    <div className="activity-header">
+                      <div>
+                        <h4>{act.name}</h4>
+                        <p>{act.description || 'Sin descripción'}</p>
+                      </div>
 
-                    {/* Tareas dentro de la actividad */}
+                      {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
+                        <div className="activity-buttons-vertical">
+                          <button className="delete-btn" onClick={() => handleDeleteActivity(act.id)}>Eliminar Actividad</button>
+                          <button button-small onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}>Editar Actividad</button>
+                          <button onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}>Agregar Tarea</button>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="task-section">
-                      <strong>Tareas:</strong>
-                      {tasksByActivity[act.id] && tasksByActivity[act.id].length > 0 ? (
+                    <div className="section-header-tasks" onClick={() => toggleActivityTasks(act.id)}>
+                      <p>Tareas</p>
+                      <span className="toggle-icon">{openActivities[act.id] ? '▲' : '▼'}</span>
+                    </div>
+
+                    {openActivities[act.id] && (
+                      tasksByActivity[act.id] && tasksByActivity[act.id].length > 0 ? (
                         <ul className="task-list">
                           {tasksByActivity[act.id].map(task => (
                             <li key={task.id} className="task-item">
-                              <strong>{task.title}</strong> - {task.description || 'Sin descripción'}<br />
-                              Estado: {task.status} | Fecha: {task.date ? new Date(task.date).toLocaleDateString() : 'Sin fecha'}<br />
-                              Asignado a: {task.assignedUsername || 'Sin asignar'}
+                              <div className="task-info">
+                                <p><strong>{task.title}</strong> - {task.description || 'Sin descripción'}</p>
+                                <p>Estado: {task.status} | Fecha: {task.date ? new Date(task.date).toLocaleDateString() : 'Sin fecha'}</p>
+                                <p>Asignado a: {task.assignedUsername || 'Sin asignar'}</p>
+                              </div>
 
                               {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
-                                <div className="task-buttons">
-                                  <button
-                                    className="button button-small"
-                                    onClick={() => handleDeleteTask(task.id, act.id)}
-                                  >
-                                    Eliminar Tarea
-                                  </button>
-                                  <button
-                                    className="button button-small"
-                                    onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/edit`)}
-                                  >
-                                    Editar Tarea
-                                  </button>
+                                <div className="task-buttons-vertical">
+                                  <button className="delete-btn" onClick={() => handleDeleteTask(task.id, act.id)}>Eliminar Tarea</button>
+                                  <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/edit`)}>Editar Tarea</button>
                                 </div>
                               )}
                             </li>
@@ -302,22 +327,12 @@ function ProjectDetails() {
                         </ul>
                       ) : (
                         <p>No hay tareas para esta actividad.</p>
-                      )}
-                    </div>
-
-                    {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
-                      <div className="activity-buttons">
-                        <button className="button button-small" onClick={() => handleDeleteActivity(act.id)}>
-                          Eliminar Actividad
-                        </button>
-                        <button className="button button-small" onClick={() => navigate(`/project/${id}/activity/${act.id}/edit`)}>
-                          Editar Actividad
-                        </button>
-                        <button className="button button-small" onClick={() => navigate(`/project/${id}/activity/${act.id}/add-task`)}>
-                          Agregar Tarea
-                        </button>
-                      </div>
+                      )
                     )}
+                  </div>
+
+
+
                   </li>
                 ))}
               </ul>

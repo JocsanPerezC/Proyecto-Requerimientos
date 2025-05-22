@@ -89,11 +89,10 @@ function EditTask() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h2>Editar Tarea</h2>
       <form onSubmit={handleSubmit} className="project-form">
-        {userRole === 'Administrador de Proyecto' && (
-          <>
+        <>
             <div className="form-group">
               <label>Título</label>
               <input
@@ -130,8 +129,6 @@ function EditTask() {
               </select>
             </div>
           </>
-        )}
-
         <div className="form-group">
           <label>Descripción</label>
           <textarea
@@ -158,7 +155,7 @@ function EditTask() {
         </div>
 
         <div className="form-actions">
-          <button type="submit">Guardar Cambios</button>
+          <button className="buttoncenter" type="submit">Guardar Cambios</button>
           <button type="button" onClick={() => navigate(`/project/${id}`)}>Cancelar</button>
         </div>
       </form>
