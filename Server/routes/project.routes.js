@@ -489,7 +489,7 @@ router.delete("/project/:id", authenticateUser, async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // Validar que el usuario sea administrador de este proyecto
+    // Validar que el usuario sea administrador del proyecto
     const roleResult = await pool.request()
       .input('userId', sql.Int, userId)
       .input('projectId', sql.Int, projectId)
@@ -502,12 +502,61 @@ router.delete("/project/:id", authenticateUser, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Solo los administradores pueden eliminar proyectos' });
     }
 
-    // Eliminar todas las relaciones de miembros
+    // 1. Obtener todos los archivos de tareas relacionados
+    const filesResult = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT ta.filepath FROM TaskAttachments ta
+        INNER JOIN Tasks t ON ta.taskid = t.id
+        INNER JOIN Activities a ON t.activityid = a.id
+        WHERE a.projectid = @projectId
+      `);
+
+    const archivos = filesResult.recordset;
+
+    // 2. Eliminar los archivos del sistema de archivos
+    archivos.forEach(file => {
+      const fullPath = path.join(__dirname, '..', file.filepath);
+      fs.unlink(fullPath, (err) => {
+        if (err) console.error("Error al eliminar archivo:", fullPath, err);
+      });
+    });
+
+    // 3. Eliminar los attachments
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        DELETE ta FROM TaskAttachments ta
+        INNER JOIN Tasks t ON ta.taskid = t.id
+        INNER JOIN Activities a ON t.activityid = a.id
+        WHERE a.projectid = @projectId
+      `);
+
+    // 4. Eliminar tareas
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        DELETE t FROM Tasks t
+        INNER JOIN Activities a ON t.activityid = a.id
+        WHERE a.projectid = @projectId
+      `);
+
+    // 5. Eliminar actividades
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`DELETE FROM Activities WHERE projectid = @projectId`);
+
+    // 6. Eliminar requerimientos
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`DELETE FROM Requerimientos WHERE projectid = @projectId`);
+
+    // 7. Eliminar roles del proyecto
     await pool.request()
       .input('projectId', sql.Int, projectId)
       .query(`DELETE FROM RolesProyecto WHERE projectid = @projectId`);
 
-    // Eliminar el proyecto
+    // 8. Finalmente, eliminar el proyecto
     await pool.request()
       .input('projectId', sql.Int, projectId)
       .query(`DELETE FROM Projects WHERE id = @projectId`);
@@ -519,7 +568,6 @@ router.delete("/project/:id", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al eliminar el proyecto' });
   }
 });
-
 
 router.get("/project/:id", authenticateUser, async (req, res) => {
   try {
@@ -800,17 +848,27 @@ router.put("/activity/:id", authenticateUser, async (req, res) => {
 // Eliminar una actividad
 router.delete('/activity/:id', authenticateUser, async (req, res) => {
   const activityId = req.params.id;
+
   try {
     const pool = await poolPromise;
+
+    // 1. Eliminar tareas asociadas a la actividad
+    await pool.request()
+      .input('activityId', sql.Int, activityId)
+      .query('DELETE FROM Tasks WHERE activityid = @activityId');
+
+    // 2. Eliminar la actividad
     await pool.request()
       .input('activityId', sql.Int, activityId)
       .query('DELETE FROM Activities WHERE id = @activityId');
+
     res.json({ success: true });
   } catch (err) {
-    console.error('Error al eliminar actividad:', err);
+    console.error('Error al eliminar actividad y sus tareas asociadas:', err);
     res.status(500).json({ success: false, message: 'Error al eliminar la actividad' });
   }
 });
+
 
 // REQUERIMIENTOS
 
@@ -971,6 +1029,20 @@ router.put("/requirement/:id", authenticateUser, async (req, res) => {
     const rol = roleResult.recordset[0]?.rol;
     if (!rol || (rol !== 'Administrador de Proyecto' && rol !== 'Lider de Proyecto')) {
       return res.status(403).json({ success: false, message: 'No autorizado para editar este requerimiento' });
+    }
+
+    // Verificar si ya existe otro requerimiento con el mismo código EN EL MISMO PROYECTO (y distinto id)
+    const codeCheck = await pool.request()
+      .input('code', sql.VarChar, code)
+      .input('requirementId', sql.Int, requirementId)
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT id FROM Requerimientos 
+        WHERE code = @code AND id <> @requirementId AND projectid = @projectId
+      `);
+
+    if (codeCheck.recordset.length > 0) {
+      return res.status(400).json({ success: false, message: 'Ya existe un requerimiento con ese código en este proyecto' });
     }
 
     // Actualizar el requerimiento

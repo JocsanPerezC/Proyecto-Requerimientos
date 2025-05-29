@@ -5,7 +5,7 @@ import '../../styles/style.css';
 
 function ProjectDetails() {
   const { id } = useParams();
-  const [taskAttachments, setTaskAttachments] = useState({});
+  const username = localStorage.getItem("username");
   const [requirementsOpen, setRequirementsOpen] = useState(false);
   const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [project, setProject] = useState(null);
@@ -98,7 +98,7 @@ function ProjectDetails() {
       if (!res.ok) throw new Error("Error al obtener archivos adjuntos");
 
       const data = await res.json();
-      setTaskAttachments(prev => ({ ...prev, [taskId]: data.attachments }));
+      //setTaskAttachments(prev => ({ ...prev, [taskId]: data.attachments }));
     } catch (err) {
       console.error("Error al obtener attachments:", err);
     }
@@ -225,8 +225,13 @@ const toggleActivityTasks = (activityId) => {
       <div className="container">
         <h2>{project.name}</h2>
         <p>{project.description}</p>
-        <p><strong>Fecha de inicio:</strong> {new Date(project.date).toLocaleDateString()}</p>
-
+        <p>
+          <strong>Fecha de inicio:</strong> {
+            project.date
+              ? project.date.split('T')[0].split('-').reverse().join('/')
+              : 'Sin fecha'
+          }
+        </p>
         <div>
           {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
             <button className="buttonproject" onClick={() => navigate(`/project/${id}/add-user`)}>Agregar Usuario</button>
@@ -258,7 +263,14 @@ const toggleActivityTasks = (activityId) => {
                   <li key={req.id} className="requirement-item">
                     <h4>Código: {req.code}</h4>
                     <p>{req.description || 'Sin detalles'}</p>
-                    <p>Tipo: {req.type}</p>
+                    <p>Tipo: <strong>{req.type}</strong></p>
+                    <p>
+                        Fecha de inicio: {
+                        req.date
+                          ? req.date.split('T')[0].split('-').reverse().join('/')
+                          : 'Sin fecha'
+                      }
+                    </p>
                     <p style={{
                         color:
                           req.status === 'Pendiente' ? 'red' :
@@ -350,10 +362,29 @@ const toggleActivityTasks = (activityId) => {
                                         <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/edit`)}>Editar Tarea</button>
                                       </>
                                     )}
-                                    <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/attachment`)}>Ver Archivos Adjuntos</button>
-                                  </div>
+                                    <button
+                                      onClick={() =>
+                                        navigate(`/project/${id}/activity/${act.id}/task/${task.id}/attachment`, {
+                                          state: {
+                                            assignedUsername: task.assignedUsername,
+                                            rolUsuario: rolUsuario,
+                                          },
+                                        })
+                                      }
+                                    >
+                                      Ver Archivos Adjuntos
+                                    </button>
+                                    </div>
                                 </div>
                                 <p>{task.description || 'Sin descripción'}</p>
+                                <p>
+                                  Fecha límite: {
+                                    task.date
+                                      ? task.date.split('T')[0].split('-').reverse().join('/')
+                                      : 'Sin fecha'
+                                  }
+                                </p>
+                                <p>Asignado a: <strong> {task.assignedUsername || 'Sin asignar'} </strong></p>
                                 <p style={{
                                   color:
                                     task.status === 'Pendiente' ? 'red' :
@@ -364,22 +395,13 @@ const toggleActivityTasks = (activityId) => {
                                 }}>
                                   {task.status}
                                 </p>
-                                
-                                <p>
-                                  Fecha: {
-                                    task.date
-                                      ? task.date.split('T')[0].split('-').reverse().join('/')
-                                      : 'Sin fecha'
-                                  }
-                                </p>
-                                <p>Asignado a: <strong> {task.assignedUsername || 'Sin asignar'} </strong></p>
                               </div>
+                              {(task.assignedUsername?.toLowerCase() === username?.toLowerCase() || rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
                               <form
                                 onSubmit={async (e) => {
                                   e.preventDefault();
                                   const file = e.target.elements.file.files[0];
                                   const altText = e.target.elements.alt.value;
-
                                   const deadline = new Date(task.date);
                                   deadline.setHours(23, 59, 59, 999);
                                   const now = new Date();
@@ -409,10 +431,12 @@ const toggleActivityTasks = (activityId) => {
                                   }
                                 }}
                               >
+                                
                                 <input type="file" name="file" accept="image/*,video/*" required />
-                                <input type="text" name="alt" placeholder="Texto alternativo" maxLength="255" />
-                                <button type="submit">Subir archivo</button>
+                                <input type="text" name="alt" placeholder="Texto alternativo" />
+                                <button className="upload-button" type="submit">Subir archivo</button>
                               </form>
+                              )}
                             </li>
                           ))}
 

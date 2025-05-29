@@ -133,15 +133,25 @@ h1, h2, h3,  h4 {
   gap: 4px;
 }
 
-input[type="file"],
 input[type="text"] {
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 14px;
   width: 100%;
-  max-width: 400px;
+  max-width: 350px;
 }
+
+input[type="file"]{
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 335px;
+  max-width: 350px;
+}
+
+
 
 .upload-button {
   background-color: #007bff;
@@ -150,9 +160,10 @@ input[type="text"] {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
   width: fit-content;
+  margin-left: 15px; /* 💡 Esto lo empuja a la derecha */
 }
+
 
 .upload-button:hover {
   background-color: #0056b3;
@@ -779,3 +790,174 @@ p.message {
 }
 
 
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 1px solid #fff !important;
+}
+
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #ccc !important;
+}
+
+.high-contrast .section-header:hover{
+  background-color: #222 !important;
+}
+
+.high-contrast .section-header-tasks {
+  background-color: #222 !important;
+}
+
+.high-contrast .topbar .menu-btn:hover {
+  background-color: #222 !important;
+}
+
+.high-contrast .section-content.open {
+  background-color: #000 !important;
+}
+
+.high-contrast button.delete-btn {
+  background-color: #ff4c4c !important;
+}
+
+.high-contrast button.delete-btn:hover {
+  background-color: #cc0000 !important;
+}
+
+/* Ajustes adicionales para modo alto contraste */
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select,
+.high-contrast button,
+.high-contrast .button,
+.high-contrast .upload-button,
+.high-contrast .buttonproject,
+.high-contrast .buttoncreate,
+.high-contrast .buttoncenter {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+/* Etiquetas y textos adicionales */
+.high-contrast label,
+.high-contrast option,
+.high-contrast .form-group label {
+  color: #fff !important;
+}
+
+/* Ajustes visuales a placeholder */
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #ccc !important;
+}
+
+/* Selects desplegables */
+.high-contrast select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important;
+}
+
+/* Iconos de sección, si son SVGs o font-icons */
+.high-contrast .toggle-icon {
+  color: #fff !important;
+}
+
+/* Corrige botones azules y rojos */
+.high-contrast .buttoncreate,
+.high-contrast .upload-button,
+.high-contrast .button-count,
+.high-contrast .button-counta,
+.high-contrast .buttonproject {
+  background-color: #000 !important;
+  border: 2px solid #fff !important;
+  color: #fff !important;
+}
+
+/* Botones de eliminar (rojos) */
+.high-contrast button.delete-btn,
+.high-contrast .button-small-delete {
+  background-color: #a00 !important;
+  border: 2px solid #fff !important;
+  color: #fff !important;
+}
+
+.high-contrast button.delete-btn:hover,
+.high-contrast .button-small-delete:hover {
+  background-color: #d00 !important;
+}
+
+/* Fondo base para toda la página */
+.high-contrast body {
+  background-color: #000 !important;
+}
+
+/* Corrige inputs internos con fondo blanco */
+.high-contrast input[type="text"],
+.high-contrast input[type="password"],
+.high-contrast input[type="email"],
+.high-contrast input[type="file"] {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+/* Contadores en modo alto contraste */
+.high-contrast .item-count,
+.high-contrast .button-count,
+.high-contrast .button-counta {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.upload-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.upload-row input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 200px;
+}
+
+.upload-row .upload-button {
+  padding: 10px 18px;
+  height: 42px;
+  white-space: nowrap;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.upload-row .upload-button:hover {
+  background-color: #0056b3;
+}
+
+/* Modo alto contraste */
+.high-contrast .upload-row input[type="text"],
+.high-contrast .upload-row .upload-button {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}

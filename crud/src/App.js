@@ -53,7 +53,7 @@ function App() {
     <UserProvider>
       <Router>
         <div className={`App ${highContrast ? "high-contrast" : ""}`}>
-           <button onClick={toggleHighContrast} style={{ position: 'fixed', top: 22, right: 75, zIndex: 1000 }}>
+           <button onClick={toggleHighContrast} style={{ position: 'fixed', top: 21, right: 100, zIndex: 1000 }}>
             {highContrast ? "Modo normal" : "Alto contraste"}
           </button>
           <Routes>

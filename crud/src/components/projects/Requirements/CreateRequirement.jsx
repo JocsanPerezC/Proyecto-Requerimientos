@@ -134,7 +134,7 @@ function CreateRequirement() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="date">Fecha (opcional)</label>
+          <label htmlFor="date">Fecha de creación</label>
           <input
             type="date"
             id="date"

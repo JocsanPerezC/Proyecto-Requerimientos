@@ -191,7 +191,7 @@ useEffect(() => {
 
 
         <div className="form-actions">
-          <button type="submit" disabled={loading}>
+          <button className="buttoncenter" type="submit" disabled={loading}>
             {loading ? 'Creando...' : 'Crear Tarea'}
           </button>
           <button type="button" onClick={() => navigate(-1)} className="cancel-btn">

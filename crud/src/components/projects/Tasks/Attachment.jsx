@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
+
+
 
 const TaskFiles = () => {
   const { id, taskId } = useParams();
+  const location = useLocation();
+  const assignedUsername = location.state?.assignedUsername;
+  const rolUsuario = location.state?.rolUsuario;
+  const username = localStorage.getItem("username"); // o como lo tengas guardado
   const [files, setFiles] = useState([]);
   const navigate = useNavigate();
 
@@ -104,39 +111,42 @@ const TaskFiles = () => {
             <p style={{ textAlign: "center", fontStyle: "italic", color: "#555" }}>
               {file.alt_text || "Sin descripción"}
             </p>
-
-            <form onSubmit={(e) => handleUpdate(e, file.id)} style={{ marginTop: "10px" }}>
-              <input
-                type="text"
-                name="newAlt"
-                defaultValue={file.alt_text}
-                placeholder="Editar texto alternativo"
-                maxLength="255"
-                required
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  marginBottom: "8px",
-                  boxSizing: "border-box",
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  backgroundColor: "#28a745",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 14px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Actualizar
-              </button>
-            </form>
+            {(assignedUsername?.toLowerCase() === username?.toLowerCase() ||
+              rolUsuario === "Administrador de Proyecto" ||
+              rolUsuario === "Lider de Proyecto") && (
+              <form onSubmit={(e) => handleUpdate(e, file.id)} style={{ marginTop: "10px" }}>
+                <input
+                  type="text"
+                  name="newAlt"
+                  defaultValue={file.alt_text}
+                  placeholder="Editar texto alternativo"
+                  maxLength="255"
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                    marginBottom: "8px",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "white",
+                    border: "none",
+                    padding: "8px 14px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  Actualizar
+                </button>
+              </form>
+            )}
           </div>
         );
       })}
