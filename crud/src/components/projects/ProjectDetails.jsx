@@ -339,11 +339,20 @@ const toggleActivityTasks = (activityId) => {
                       tasksByActivity[act.id] && tasksByActivity[act.id].length > 0 ? (
                         <ul className="task-list">
                           {tasksByActivity[act.id].map(task => (
-                            <li key={task.id} className="task-item-flex">
-                              
-
+                            <li key={task.id} className="task-item-flex">                       
                               <div className="task-info">
-                                <p><strong>{task.title}</strong></p>
+                                <div className="task-header">
+                                  <strong>{task.title}</strong>
+                                  <div className="task-action-buttons">
+                                    {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
+                                      <>
+                                        <button className="delete-btn" onClick={() => handleDeleteTask(task.id, act.id)}>Eliminar Tarea</button>
+                                        <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/edit`)}>Editar Tarea</button>
+                                      </>
+                                    )}
+                                    <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/attachment`)}>Ver Archivos Adjuntos</button>
+                                  </div>
+                                </div>
                                 <p>{task.description || 'Sin descripción'}</p>
                                 <p style={{
                                   color:
@@ -404,14 +413,6 @@ const toggleActivityTasks = (activityId) => {
                                 <input type="text" name="alt" placeholder="Texto alternativo" maxLength="255" />
                                 <button type="submit">Subir archivo</button>
                               </form>
-
-                              {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
-                                <div className="task-buttons-vertical">
-                                  <button className="delete-btn" onClick={() => handleDeleteTask(task.id, act.id)}>Eliminar Tarea</button>
-                                  <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/edit`)}>Editar Tarea</button>
-                                </div>
-                              )}
-                              <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/attachment`)}>Ver Archivos Adjuntos</button>
                             </li>
                           ))}
 
@@ -421,9 +422,6 @@ const toggleActivityTasks = (activityId) => {
                       )
                     )}
                   </div>
-
-
-
                   </li>
                 ))}
               </ul>

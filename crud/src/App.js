@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
 
 // Autenticación
 import Login from './Components/auth/Login';
@@ -42,10 +43,19 @@ import Attachment from './Components/Projects/Tasks/Attachment';
 import './styles/style.css';
 
 function App() {
+  const [highContrast, setHighContrast] = useState(false);
+
+  const toggleHighContrast = () => {
+    setHighContrast(prev => !prev);
+  };
+
   return (
     <UserProvider>
       <Router>
-        <div className="App">
+        <div className={`App ${highContrast ? "high-contrast" : ""}`}>
+           <button onClick={toggleHighContrast} style={{ position: 'fixed', top: 22, right: 75, zIndex: 1000 }}>
+            {highContrast ? "Modo normal" : "Alto contraste"}
+          </button>
           <Routes>
             {/* Ruta por defecto */}
             <Route path="/" element={<Navigate to="/login" />} />

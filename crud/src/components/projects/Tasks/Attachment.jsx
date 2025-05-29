@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate} from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const TaskFiles = () => {
   const { id, taskId } = useParams();
@@ -45,55 +45,101 @@ const TaskFiles = () => {
 
       const result = await res.json();
       alert(result.message || "Texto alternativo actualizado.");
-      fetchFiles(); // Recargar lista actualizada
+      fetchFiles();
     } catch (err) {
       alert("Error al actualizar el texto alternativo.");
     }
   };
 
   return (
-    <div>
-      <h2>Archivos de la tarea</h2>
-      <button type="button" onClick={() => navigate(`/project/${id}`)}>Volver</button>
+    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      <h2 style={{ marginBottom: "10px" }}>Archivos de la tarea</h2>
+      <button
+        type="button"
+        onClick={() => navigate(`/project/${id}`)}
+        style={{
+          marginBottom: "20px",
+          backgroundColor: "#007bff",
+          color: "white",
+          border: "none",
+          padding: "8px 14px",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        Volver
+      </button>
+
       {files.map((file) => {
         const isVideo = file.filepath.match(/\.(mp4|webm|ogg)$/i);
         const fileUrl = `http://localhost:3001/${file.filepath}`;
 
         return (
-            <div key={file.id} style={{ marginBottom: "20px" }}>
-            {isVideo ? (
-                <video
-                controls
-                style={{ maxWidth: "300px", borderRadius: "8px" }}
-                >
-                <source src={fileUrl} type="video/mp4" />
-                Tu navegador no soporta video.
+          <div
+            key={file.id}
+            style={{
+              marginBottom: "30px",
+              padding: "16px",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
+              backgroundColor: "#fafafa",
+              maxWidth: "360px",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: "10px" }}>
+              {isVideo ? (
+                <video controls style={{ maxWidth: "100%", borderRadius: "8px" }}>
+                  <source src={fileUrl} type="video/mp4" />
+                  Tu navegador no soporta video.
                 </video>
-            ) : (
+              ) : (
                 <img
-                src={fileUrl}
-                alt={file.alt_text || "Recurso sin descripción"}
-                style={{ maxWidth: "300px", borderRadius: "8px" }}
+                  src={fileUrl}
+                  alt={file.alt_text || "Recurso sin descripción"}
+                  style={{ maxWidth: "100%", borderRadius: "8px" }}
                 />
-            )}
+              )}
+            </div>
 
-            <p><em>{file.alt_text || "Sin descripción"}</em></p>
+            <p style={{ textAlign: "center", fontStyle: "italic", color: "#555" }}>
+              {file.alt_text || "Sin descripción"}
+            </p>
 
-            <form onSubmit={(e) => handleUpdate(e, file.id)}>
-                <input
+            <form onSubmit={(e) => handleUpdate(e, file.id)} style={{ marginTop: "10px" }}>
+              <input
                 type="text"
                 name="newAlt"
                 defaultValue={file.alt_text}
                 placeholder="Editar texto alternativo"
                 maxLength="255"
                 required
-                />
-                <button type="submit">Actualizar</button>
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  marginBottom: "8px",
+                  boxSizing: "border-box",
+                }}
+              />
+              <button
+                type="submit"
+                style={{
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  border: "none",
+                  padding: "8px 14px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  width: "100%",
+                }}
+              >
+                Actualizar
+              </button>
             </form>
-            </div>
+          </div>
         );
-        })}
-      
+      })}
     </div>
   );
 };

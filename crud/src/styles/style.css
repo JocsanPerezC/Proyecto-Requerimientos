@@ -106,6 +106,59 @@ h1, h2, h3,  h4 {
   margin-top: 15px;
 }
 
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.task-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  gap: 4px;
+}
+
+input[type="file"],
+input[type="text"] {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.upload-button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  width: fit-content;
+}
+
+.upload-button:hover {
+  background-color: #0056b3;
+}
+
+
 /* Estilos para las listas */
 .requirement-list,
 .activity-list {
@@ -659,5 +712,70 @@ p.message {
 }
 
 
+
+
+/* Estilo general de alto contraste */
+.high-contrast body,
+.high-contrast .container,
+.high-contrast .container-login,
+.high-contrast .container-recover,
+.high-contrast .container-adduserproject,
+.high-contrast .container-users,
+.high-contrast .user-box,
+.high-contrast .requirement-item,
+.high-contrast .activity-item,
+.high-contrast .section-header,
+.high-contrast .section-content,
+.high-contrast .task-item-flex,
+.high-contrast .topbar,
+.high-contrast .user-menu,
+.high-contrast .project-item,
+.high-contrast .titulo,
+.high-contrast .task-buttons-vertical button,
+.high-contrast .activity-buttons-vertical button,
+.high-contrast .buttoncreate,
+.high-contrast .buttoncenter,
+.high-contrast .button-count,
+.high-contrast .button-counta,
+.high-contrast .buttonproject,
+.high-contrast .upload-button,
+.high-contrast .user-box button,
+.high-contrast .button,
+.high-contrast h1, 
+.high-contrast h2, 
+.high-contrast h3, 
+.high-contrast h4,
+.high-contrast p,
+.high-contrast label {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+  box-shadow: none !important;
+}
+
+.high-contrast .user-box,
+.high-contrast .requirement-item,
+.high-contrast .activity-item,
+.high-contrast .task-item-flex,
+.high-contrast .project-item {
+  border: 2px solid #fff !important;
+}
+
+.high-contrast .status-pendiente {
+  color: #ff4c4c !important;
+}
+
+.high-contrast .status-en-progreso {
+  color: #ffc107 !important;
+}
+
+.high-contrast .status-completado {
+  color: #00ff00 !important;
+}
+
+.high-contrast a {
+  color: #0ff !important;
+  text-decoration: underline;
+}
 
 
