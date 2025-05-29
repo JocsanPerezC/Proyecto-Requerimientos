@@ -340,28 +340,7 @@ const toggleActivityTasks = (activityId) => {
                         <ul className="task-list">
                           {tasksByActivity[act.id].map(task => (
                             <li key={task.id} className="task-item-flex">
-                              {taskAttachments[task.id] && taskAttachments[task.id].length > 0 && (
-                                <div className="task-attachments">
-                                  <strong>Archivos entregados:</strong>
-                                  {taskAttachments[task.id].map((file) => (
-                                    <div key={file.id} style={{ marginTop: '10px' }}>
-                                      {file.filepath.endsWith('.mp4') || file.filepath.endsWith('.webm') ? (
-                                        <video width="300" controls>
-                                          <source src={`http://localhost:3001/${file.filepath}`} type="video/mp4" />
-                                          Tu navegador no soporta la reproducción de video.
-                                        </video>
-                                      ) : (
-                                        <img
-                                          src={`http://localhost:3001/${file.filepath}`}
-                                          alt={file.alt_text || 'Recurso sin descripción'}
-                                          style={{ maxWidth: '300px', borderRadius: '8px' }}
-                                        />
-                                      )}
-                                      <p><em>{file.alt_text}</em></p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              
 
                               <div className="task-info">
                                 <p><strong>{task.title}</strong></p>
@@ -432,6 +411,7 @@ const toggleActivityTasks = (activityId) => {
                                   <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/edit`)}>Editar Tarea</button>
                                 </div>
                               )}
+                              <button onClick={() => navigate(`/project/${id}/activity/${act.id}/task/${task.id}/attachment`)}>Ver Archivos Adjuntos</button>
                             </li>
                           ))}
 

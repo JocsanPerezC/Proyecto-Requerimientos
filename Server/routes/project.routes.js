@@ -5,7 +5,8 @@ const { poolPromise } = require('../db'); // ajusta el path según la estructura
 const { authenticateUser } = require('../middleware/auth');
 const { isAdminOfProject } = require('../utils/permissions'); // asegúrate de tener esta función
 const multer = require("multer");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -36,17 +37,17 @@ const upload = multer({
   }
 });
 
-router.put("/tasks/attachment/:id/alt", authenticateUser, async (req, res) => {
+router.patch("/tasks/attachment/:id/alt", authenticateUser, async (req, res) => {
   const { id } = req.params;
-  const { altText } = req.body;
-
+  const { alt_text } = req.body;
+  console.log(alt_text);
   try {
     const pool = await poolPromise;
 
     await pool.request()
       .input("id", sql.Int, parseInt(id))
-      .input("altText", sql.VarChar, altText)
-      .query(`UPDATE TaskAttachments SET alt_text = @altText WHERE id = @id`);
+      .input("alt_text", sql.VarChar, alt_text)
+      .query(`UPDATE TaskAttachments SET alt_text = @alt_text WHERE id = @id`);
 
     res.json({ success: true, message: "Texto alternativo actualizado." });
   } catch (err) {
@@ -1186,16 +1187,42 @@ router.put("/task/:id", authenticateUser, async (req, res) => {
 
 // Eliminar una tarea
 router.delete('/task/:id', authenticateUser, async (req, res) => {
-  const taskId = req.params.id;
+  const taskid = req.params.id;
+
   try {
     const pool = await poolPromise;
+
+    // Obtener los documentos asociados a la tarea antes de eliminarlos
+    const result = await pool.request()
+      .input('taskid', sql.Int, taskid)
+      .query('SELECT filepath FROM TaskAttachments WHERE taskid = @taskid');
+
+    const documentos = result.recordset;
+
+    // Eliminar los documentos de la base de datos
     await pool.request()
-      .input('taskId', sql.Int, taskId)
-      .query('DELETE FROM Tasks WHERE id = @taskId');
+      .input('taskid', sql.Int, taskid)
+      .query('DELETE FROM TaskAttachments WHERE taskid = @taskid');
+
+    // Eliminar los archivos físicamente
+    documentos.forEach(doc => {
+      const fullPath = path.join(__dirname, '..', doc.filepath);
+      fs.unlink(fullPath, (err) => {
+        if (err) {
+          console.error(`No se pudo eliminar el archivo: ${fullPath}`, err);
+        }
+      });
+    });
+
+    // Finalmente, eliminar la tarea
+    await pool.request()
+      .input('taskid', sql.Int, taskid)
+      .query('DELETE FROM Tasks WHERE id = @taskid');
+
     res.json({ success: true });
   } catch (err) {
-    console.error('Error al eliminar tarea:', err);
-    res.status(500).json({ success: false, message: 'Error al eliminar la tarea' });
+    console.error('Error al eliminar tarea y sus archivos:', err);
+    res.status(500).json({ success: false, message: 'Error al eliminar la tarea y sus archivos' });
   }
 });
 

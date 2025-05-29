@@ -36,6 +36,7 @@ import EditActivities from './Components/Projects/Activities/EditActivities';
 // Tareas
 import CreateTask from './Components/Projects/Tasks/CreateTask';
 import EditTask from './Components/Projects/Tasks/EditTask';
+import Attachment from './Components/Projects/Tasks/Attachment';
 
 // Estilos
 import './styles/style.css';
@@ -76,6 +77,8 @@ function App() {
             {/* Tareas */}
             <Route path="/project/:id/activity/:activityId/add-task" element={<CreateTask />} />
             <Route path="/project/:id/activity/:activityId/task/:taskId/edit" element={<EditTask />} />
+            <Route path="/project/:id/activity/:activityId/task/:taskId/attachment" element={<Attachment />} />
+
 
             {/* Usuarios en proyecto */}
             <Route path="/project/:id/add-user" element={<AddUserToProject />} />

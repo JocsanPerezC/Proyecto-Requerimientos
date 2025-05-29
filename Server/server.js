@@ -1,10 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+const path = require("path");
+
 require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Importar rutas
 const authRoutes = require("./routes/auth.routes");
