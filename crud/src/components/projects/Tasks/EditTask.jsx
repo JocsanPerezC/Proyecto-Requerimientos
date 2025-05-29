@@ -104,7 +104,7 @@ function EditTask() {
             </div>
 
             <div className="form-group">
-              <label>Fecha</label>
+              <label>Fecha de Finalización</label>
               <input
                 type="date"
                 name="date"

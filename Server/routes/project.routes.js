@@ -4,6 +4,123 @@ const sql = require('mssql');
 const { poolPromise } = require('../db'); // ajusta el path según la estructura
 const { authenticateUser } = require('../middleware/auth');
 const { isAdminOfProject } = require('../utils/permissions'); // asegúrate de tener esta función
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 * 1024}, // 2GB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/png", "image/jpeg", "image/jpg",
+      "video/mp4", "video/webm",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ];
+    if (allowedTypes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("Tipo de archivo no permitido"));
+  }
+});
+
+router.put("/tasks/attachment/:id/alt", authenticateUser, async (req, res) => {
+  const { id } = req.params;
+  const { altText } = req.body;
+
+  try {
+    const pool = await poolPromise;
+
+    await pool.request()
+      .input("id", sql.Int, parseInt(id))
+      .input("altText", sql.VarChar, altText)
+      .query(`UPDATE TaskAttachments SET alt_text = @altText WHERE id = @id`);
+
+    res.json({ success: true, message: "Texto alternativo actualizado." });
+  } catch (err) {
+    console.error("Error al actualizar alt text:", err);
+    res.status(500).json({ success: false, message: "Error al actualizar el texto alternativo." });
+  }
+});
+
+
+router.post("/tasks/upload", authenticateUser, upload.single("file"), async (req, res) => {
+  const taskId = parseInt(req.body.taskId);
+  const filePath = req.file.path;
+  const altText = req.body.altText || null;
+
+  try {
+    const pool = await poolPromise;
+
+    // Obtener la fecha límite de la tarea
+    const result = await pool.request()
+      .input("taskId", sql.Int, taskId)
+      .query(`SELECT date FROM Tasks WHERE id = @taskId`);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: "Tarea no encontrada" });
+    }
+
+    const { DateTime } = require('luxon');
+    const now = DateTime.now().setZone('America/Costa_Rica');
+    const deadline = DateTime.fromISO(taskId.date, { zone: 'America/Costa_Rica' }); // deadlineRaw = la fecha de la DB
+    console.log("Fecha límite de la tarea:", deadline.toISO(), "Fecha actual:", now.toISO());
+
+    if (deadline < now) {
+      return res.status(400).json({ success: false, message: "La fecha límite para entregar esta tarea ha expirado." });
+    }
+
+    // Insertar el archivo
+    await pool.request()
+    .input("taskId", sql.Int, taskId)
+    .input("path", sql.VarChar, filePath)
+    .input("altText", sql.VarChar, altText)
+    .query(`
+      INSERT INTO TaskAttachments (taskid, filepath, alt_text)
+      VALUES (@taskId, @path, @altText)
+    `);
+
+    res.json({ success: true, message: "Archivo subido correctamente." });
+  } catch (err) {
+    console.error("Error al subir archivo:", err);
+    res.status(500).json({ success: false, message: "Error al subir el archivo." });
+  }
+});
+
+// Obtener los attachments de una tarea específica
+router.get("/task/:id/attachments", authenticateUser, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input("taskId", sql.Int, parseInt(id))
+      .query(`
+        SELECT id, taskid, filepath, alt_text
+        FROM TaskAttachments
+        WHERE taskid = @taskId
+      `);
+
+    res.json({ success: true, attachments: result.recordset });
+  } catch (err) {
+    console.error("Error al obtener los attachments:", err);
+    res.status(500).json({ success: false, message: "Error al obtener los archivos adjuntos." });
+  }
+});
+
 
 router.post("/project/:id/add-user", authenticateUser, async (req, res) => {
   try {
@@ -921,6 +1038,7 @@ router.get('/activity/:id/tasks', authenticateUser, async (req, res) => {
   }
 });
 
+//Crear una tarea
 router.post("/create-task", authenticateUser, async (req, res) => {
   try {
     const { name, description, date, status, assigned, activityid } = req.body;

@@ -146,7 +146,7 @@ useEffect(() => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="date">Fecha</label>
+          <label htmlFor="date">Fecha de Finalización</label>
           <input
             type="date"
             id="date"

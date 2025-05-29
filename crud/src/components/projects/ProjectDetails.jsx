@@ -5,6 +5,7 @@ import '../../styles/style.css';
 
 function ProjectDetails() {
   const { id } = useParams();
+  const [taskAttachments, setTaskAttachments] = useState({});
   const [requirementsOpen, setRequirementsOpen] = useState(false);
   const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [project, setProject] = useState(null);
@@ -85,25 +86,54 @@ function ProjectDetails() {
     }
   }, [activities]);
 
-  // Función para obtener tareas por actividad
-  const fetchTasksForActivity = async (activityId) => {
+  const fetchAttachments = async (taskId) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/activity/${activityId}/tasks`, {
+      const res = await fetch(`http://localhost:3001/api/task/${taskId}/attachments`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('username')}`
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('username')}`
         }
       });
 
+      if (!res.ok) throw new Error("Error al obtener archivos adjuntos");
+
       const data = await res.json();
-      if (res.ok) {
-        setTasksByActivity(prev => ({ ...prev, [activityId]: data.tasks }));
-      } else {
-        console.error("Error al obtener tareas:", data.message);
-      }
+      setTaskAttachments(prev => ({ ...prev, [taskId]: data.attachments }));
     } catch (err) {
-      console.error("Error al cargar tareas:", err);
+      console.error("Error al obtener attachments:", err);
     }
   };
+
+
+
+  // Función para obtener tareas por actividad
+  const fetchTasksForActivity = async (activityId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/activity/${activityId}/tasks`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('username')}`
+        }
+      });
+      const data = await response.json();
+      const tasks = data.tasks || [];
+
+      // Guardar tareas por actividad
+      setTasksByActivity(prev => ({
+        ...prev,
+        [activityId]: tasks
+      }));
+
+      // Obtener attachments por cada tarea
+      tasks.forEach(task => {
+        fetchAttachments(task.id);
+      });
+
+    } catch (err) {
+      console.error(`Error al cargar tareas de la actividad ${activityId}:`, err);
+    }
+  };
+
 
   // Maneja la eliminación de requerimientos
   const handleDeleteRequirement = async (requirementId) => {
@@ -310,6 +340,29 @@ const toggleActivityTasks = (activityId) => {
                         <ul className="task-list">
                           {tasksByActivity[act.id].map(task => (
                             <li key={task.id} className="task-item-flex">
+                              {taskAttachments[task.id] && taskAttachments[task.id].length > 0 && (
+                                <div className="task-attachments">
+                                  <strong>Archivos entregados:</strong>
+                                  {taskAttachments[task.id].map((file) => (
+                                    <div key={file.id} style={{ marginTop: '10px' }}>
+                                      {file.filepath.endsWith('.mp4') || file.filepath.endsWith('.webm') ? (
+                                        <video width="300" controls>
+                                          <source src={`http://localhost:3001/${file.filepath}`} type="video/mp4" />
+                                          Tu navegador no soporta la reproducción de video.
+                                        </video>
+                                      ) : (
+                                        <img
+                                          src={`http://localhost:3001/${file.filepath}`}
+                                          alt={file.alt_text || 'Recurso sin descripción'}
+                                          style={{ maxWidth: '300px', borderRadius: '8px' }}
+                                        />
+                                      )}
+                                      <p><em>{file.alt_text}</em></p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
                               <div className="task-info">
                                 <p><strong>{task.title}</strong></p>
                                 <p>{task.description || 'Sin descripción'}</p>
@@ -323,9 +376,55 @@ const toggleActivityTasks = (activityId) => {
                                 }}>
                                   {task.status}
                                 </p>
-                                <p>Fecha: {task.date ? new Date(task.date).toLocaleDateString() : 'Sin fecha'}</p>
+                                
+                                <p>
+                                  Fecha: {
+                                    task.date
+                                      ? task.date.split('T')[0].split('-').reverse().join('/')
+                                      : 'Sin fecha'
+                                  }
+                                </p>
                                 <p>Asignado a: <strong> {task.assignedUsername || 'Sin asignar'} </strong></p>
                               </div>
+                              <form
+                                onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  const file = e.target.elements.file.files[0];
+                                  const altText = e.target.elements.alt.value;
+
+                                  const deadline = new Date(task.date);
+                                  deadline.setHours(23, 59, 59, 999);
+                                  const now = new Date();
+
+                                  if (now > deadline) return alert("Ya no se puede entregar esta tarea.");
+                                  if (!file) return alert("Debe seleccionar un archivo.");
+                                  if (file.size > 2 * 1024 * 1024 * 1024) return alert("El archivo no debe superar los 2GB.");
+
+                                  const formData = new FormData();
+                                  formData.append("file", file);
+                                  formData.append("taskId", task.id);
+                                  formData.append("altText", altText);
+
+                                  try {
+                                    const res = await fetch("http://localhost:3001/api/tasks/upload", {
+                                      method: "POST",
+                                      headers: {
+                                        Authorization: `Bearer ${localStorage.getItem("username")}`
+                                      },
+                                      body: formData
+                                    });
+
+                                    const result = await res.json();
+                                    alert(result.message);
+                                  } catch (err) {
+                                    alert("Error al subir el archivo.");
+                                  }
+                                }}
+                              >
+                                <input type="file" name="file" accept="image/*,video/*" required />
+                                <input type="text" name="alt" placeholder="Texto alternativo" maxLength="255" />
+                                <button type="submit">Subir archivo</button>
+                              </form>
 
                               {(rolUsuario === 'Administrador de Proyecto' || rolUsuario === 'Lider de Proyecto') && (
                                 <div className="task-buttons-vertical">

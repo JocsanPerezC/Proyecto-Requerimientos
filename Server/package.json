@@ -9,7 +9,9 @@
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "it": "^1.1.1",
+    "luxon": "^3.6.1",
     "mssql": "^11.0.1",
+    "multer": "^2.0.0",
     "react-toastify": "^11.0.5"
   },
   "name": "proyecto",
